@@ -6,7 +6,7 @@ import { listAccounts } from './db.js';
 import { refreshQuota } from './accounts.js';
 import { scanAccountHealth, startAutoSwitch } from './autoSwitch.js';
 
-const VERSION = '0.1.0-preview.2';
+const VERSION = '0.1.0-preview.3';
 const here = path.dirname(fileURLToPath(import.meta.url));
 
 function uiDir(): string {

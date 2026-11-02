@@ -4,9 +4,9 @@
 <h1 align="center">Codex Manager</h1>
 <p align="center">Your Codex accounts, quotas and local routing in one desktop app.</p>
 <p align="center">
-  <a href="https://github.com/GruffDuck/codex-manager/releases/tag/v0.1.0-preview.2"><img alt="Release: preview" src="https://img.shields.io/badge/release-0.1.0_preview.2-blue?style=flat-square"></a>
+  <a href="https://github.com/GruffDuck/codex-manager/releases/tag/v0.1.0-preview.3"><img alt="Release: preview" src="https://img.shields.io/badge/release-0.1.0_preview.3-blue?style=flat-square"></a>
   <a href="LICENSE"><img alt="License: CC BY-NC-SA 4.0" src="https://img.shields.io/badge/license-CC_BY--NC--SA_4.0-64748b?style=flat-square"></a>
-  <a href="docs/validation.md"><img alt="Validation: 35 tests passed on macOS" src="https://img.shields.io/badge/macOS_tests-35_passed-15803d?style=flat-square"></a>
+  <a href="docs/validation.md"><img alt="Validation: 39 tests passed on macOS" src="https://img.shields.io/badge/macOS_tests-39_passed-15803d?style=flat-square"></a>
 </p>
 <p align="center">
   <a href="#download">Download</a> · <a href="#getting-started">Getting started</a> · <a href="#screenshots">Screenshots</a> · <a href="#documentation">Documentation</a>
@@ -45,11 +45,11 @@ can distribute Responses API requests across eligible accounts.
 
 | Platform | Installer | Alternative |
 | --- | --- | --- |
-| macOS Apple Silicon | [Download DMG](https://github.com/GruffDuck/codex-manager/releases/download/v0.1.0-preview.2/Codex.Manager-0.1.0-preview.2-mac-arm64.dmg) | [Download ZIP](https://github.com/GruffDuck/codex-manager/releases/download/v0.1.0-preview.2/Codex.Manager-0.1.0-preview.2-mac-arm64.zip) |
-| Windows x64 · testing preview | [Download Setup EXE](https://github.com/GruffDuck/codex-manager/releases/download/v0.1.0-preview.2/Codex.Manager-Setup-0.1.0-preview.2-win-x64.exe) | [Download ZIP](https://github.com/GruffDuck/codex-manager/releases/download/v0.1.0-preview.2/Codex.Manager-0.1.0-preview.2-win-x64.zip) |
+| macOS Apple Silicon | [Download DMG](https://github.com/GruffDuck/codex-manager/releases/download/v0.1.0-preview.3/Codex.Manager-0.1.0-preview.3-mac-arm64.dmg) | [Download ZIP](https://github.com/GruffDuck/codex-manager/releases/download/v0.1.0-preview.3/Codex.Manager-0.1.0-preview.3-mac-arm64.zip) |
+| Windows x64 · testing preview | [Download Setup EXE](https://github.com/GruffDuck/codex-manager/releases/download/v0.1.0-preview.3/Codex.Manager-Setup-0.1.0-preview.3-win-x64.exe) | [Download ZIP](https://github.com/GruffDuck/codex-manager/releases/download/v0.1.0-preview.3/Codex.Manager-0.1.0-preview.3-win-x64.zip) |
 
-[Release notes](https://github.com/GruffDuck/codex-manager/releases/tag/v0.1.0-preview.2)
-· [SHA-256 checksums](https://github.com/GruffDuck/codex-manager/releases/download/v0.1.0-preview.2/SHA256SUMS.txt)
+[Release notes](https://github.com/GruffDuck/codex-manager/releases/tag/v0.1.0-preview.3)
+· [SHA-256 checksums](https://github.com/GruffDuck/codex-manager/releases/download/v0.1.0-preview.3/SHA256SUMS.txt)
 · [All releases](https://github.com/GruffDuck/codex-manager/releases)
 
 Node.js is included in the desktop packages. You do not need Node or npm to use
@@ -132,10 +132,18 @@ not change the account displayed in the Codex desktop app.
 
 ## Screenshots
 
-These images were captured from a **native Electron application window** running
-the production UI with a separate, read-only demonstration backend. Account
-addresses, quotas and request history are synthetic. They are not browser
+These images were captured from a **native Electron application window**. The
+account, settings, gateway and traffic images use a read-only demonstration
+backend with synthetic accounts and requests. The sign-in image uses the real
+Preview 3 package in an empty temporary profile. They are not browser
 screenshots or generated UI mockups.
+
+<details>
+<summary><strong>Browser and in-app sign-in</strong></summary>
+
+![Native sign-in options in the packaged application, using an empty test profile](docs/images/sign-in-options.jpg)
+
+</details>
 
 <details>
 <summary><strong>Accounts in dark mode</strong></summary>

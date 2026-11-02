@@ -3,16 +3,24 @@
 const { app, BrowserWindow, dialog, shell, Tray, nativeImage, nativeTheme, screen, ipcMain, Notification } = require('electron');
 
 app.setName('Codex Manager');
+if (process.platform === 'win32') app.setAppUserModelId('local.codex-manager');
+const { signInUrl, webUrl, startDesktop } = require('./desktop-policy.cjs');
+const startupAt = Date.now();
 const { spawn, execFileSync } = require('node:child_process');
 const path = require('node:path');
 const fs = require('node:fs');
 const http = require('node:http');
+if (process.env.CODEX_MANAGER_USER_DATA) {
+  fs.mkdirSync(process.env.CODEX_MANAGER_USER_DATA, { recursive: true });
+  app.setPath('userData', process.env.CODEX_MANAGER_USER_DATA);
+}
 
 const root = path.join(__dirname, '..');
 const coreEntry = path.join(root, 'core', 'dist', 'main.js');
 const uiIndex = path.join(root, 'ui', 'dist', 'index.html');
 const PORT = Number(process.env.CODEX_MANAGER_PORT || 8055);
 const BASE = `http://127.0.0.1:${PORT}`;
+const EXPECTED_VERSION = require('../package.json').version;
 
 let core = null;
 let win = null;
@@ -22,6 +30,11 @@ let quitting = false;
 let eventCursor = 0;
 let eventTimer = null;
 let incompatibleCore = false;
+let signInWindow = null;
+let startupFailure = null;
+function markStartup(stage) {
+  fs.appendFile(path.join(app.getPath('userData'), 'startup.log'), `${new Date().toISOString()} ${stage} ${Date.now() - startupAt}ms\n`, () => {});
+}
 
 // Single instance: a second launch just focuses the existing window.
 if (!app.requestSingleInstanceLock()) {
@@ -39,7 +52,8 @@ function nodeBinary() {
   if (app.isPackaged) {
     const binary = path.join(process.resourcesPath, 'runtime', process.platform === 'win32' ? 'node.exe' : 'node');
     if (!fs.existsSync(binary)) throw new Error('Bundled Node runtime is missing. Reinstall Codex Manager.');
-    return { binary, version: execFileSync(binary, ['-v'], { encoding: 'utf8' }).trim() };
+    const manifest = JSON.parse(fs.readFileSync(path.join(process.resourcesPath, 'runtime', 'manifest.json'), 'utf8'));
+    return { binary, version: manifest.version };
   }
   const candidates = [
     process.env.CODEX_MANAGER_NODE,
@@ -73,8 +87,8 @@ function health() {
       response.on('end', () => {
         try {
           const status = JSON.parse(body);
-          incompatibleCore = status.ok === true && status.management_api !== 3;
-          resolve(status.ok === true && status.management_api === 3);
+          incompatibleCore = status.ok === true && (status.management_api !== 3 || status.version !== EXPECTED_VERSION);
+          resolve(status.ok === true && status.management_api === 3 && status.version === EXPECTED_VERSION);
         } catch {
           resolve(false);
         }
@@ -91,8 +105,9 @@ function health() {
 async function waitForCore(timeoutMs = 20000) {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
+    if (startupFailure) throw startupFailure;
     if (await health()) return true;
-    await new Promise((resolve) => setTimeout(resolve, 250));
+    await new Promise((resolve) => setTimeout(resolve, 100));
   }
   return false;
 }
@@ -115,10 +130,12 @@ async function startCore() {
     env: { ...process.env, CODEX_MANAGER_PORT: String(PORT) },
     stdio: ['ignore', 'pipe', 'pipe'],
   });
+  core.once('error', (error) => { startupFailure = new Error(`Could not start the bundled runtime: ${error.message}`); });
   core.stdout.pipe(log);
   core.stderr.pipe(log);
 
   core.on('exit', (code) => {
+    startupFailure = new Error(`Core stopped during startup (exit ${code}). See ${logFile}`);
     log.write(`=== core exited with ${code} ===\n`);
     if (code !== 0 && win && !win.isDestroyed()) {
       dialog.showErrorBox('Codex Manager core stopped', `Exit code ${code}. See ${logFile}`);
@@ -130,24 +147,25 @@ async function startCore() {
   }
 }
 
-async function createWindow() {
+async function createWindow(starting = false) {
   win = new BrowserWindow({
     width: 1180,
     height: 820,
     minWidth: 900,
     minHeight: 620,
-    background: '#f0f6f7',
+    backgroundColor: '#f8f9fb',
     icon: path.join(__dirname, 'assets', 'icon.png'),
     titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'default',
     show: false,
     webPreferences: {
+      preload: path.join(__dirname, 'preload.cjs'),
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: true,
     },
   });
 
-  win.once('ready-to-show', () => win.show());
+  win.once('ready-to-show', () => { win.show(); markStartup('window-visible'); });
   // Closing the window keeps the app (and the core) alive in the tray.
   win.on('close', (event) => {
     if (!quitting) {
@@ -156,13 +174,55 @@ async function createWindow() {
     }
   });
   win.webContents.setWindowOpenHandler(({ url }) => {
-    if (url.startsWith('http://127.0.0.1') || url.startsWith('http://localhost')) return { action: 'allow' };
-    void shell.openExternal(url);
+    if (webUrl(url)) void shell.openExternal(url).catch(() => {});
     return { action: 'deny' };
   });
-
-  await win.loadURL(BASE);
+  win.webContents.on('will-navigate', (event, url) => {
+    if (new URL(url).origin === BASE) return;
+    event.preventDefault();
+    if (webUrl(url)) void shell.openExternal(url).catch(() => {});
+  });
+  if (starting) await win.loadFile(path.join(__dirname, 'startup.html'));
+  else await win.loadURL(BASE);
 }
+
+function assertMainWindow(event) {
+  if (!win || event.sender !== win.webContents || event.senderFrame !== win.webContents.mainFrame || new URL(event.senderFrame.url).origin !== BASE) {
+    throw new Error('Sign-in can only be opened from Manager.');
+  }
+}
+ipcMain.handle('login:open', async (event, value, mode) => {
+  assertMainWindow(event);
+  const url = signInUrl(value);
+  if (mode === 'browser') {
+    await shell.openExternal(url.href);
+    if (signInWindow && !signInWindow.isDestroyed()) signInWindow.close();
+    return;
+  }
+  if (mode !== 'app') throw new Error('Invalid sign-in destination.');
+  if (signInWindow && !signInWindow.isDestroyed()) signInWindow.close();
+  const child = new BrowserWindow({
+    width: 560, height: 760, parent: win, title: 'Sign in with ChatGPT',
+    icon: path.join(__dirname, 'assets', 'icon.png'),
+    webPreferences: { sandbox: true, contextIsolation: true, nodeIntegration: false },
+  });
+  signInWindow = child;
+  child.on('closed', () => { if (signInWindow === child) signInWindow = null; });
+  const callbackOrigin = new URL(url.searchParams.get('redirect_uri')).origin;
+  child.webContents.on('will-navigate', (event, target) => {
+    const next = new URL(target);
+    if (next.protocol !== 'https:' && next.origin !== callbackOrigin) event.preventDefault();
+  });
+  child.webContents.setWindowOpenHandler(({ url: target }) => {
+    if (webUrl(target) && new URL(target).protocol === 'https:') void shell.openExternal(target).catch(() => {});
+    return { action: 'deny' };
+  });
+  await child.loadURL(url.href);
+});
+ipcMain.handle('login:close', (event) => {
+  assertMainWindow(event);
+  if (signInWindow && !signInWindow.isDestroyed()) signInWindow.close();
+});
 
 function getJson(pathname) {
   return new Promise((resolve) => {
@@ -353,7 +413,7 @@ async function updateTrayTitle() {
   if (!tray) return;
   const state = await getJson('/api/state');
   if (!state) {
-    tray.setTitle('');
+    if (process.platform === 'darwin') tray.setTitle('');
     tray.setToolTip('Codex Manager — core offline');
     return;
   }
@@ -366,13 +426,13 @@ async function updateTrayTitle() {
     accounts.find((account) => account.is_current) ??
     accounts[0];
   if (!current) {
-    tray.setTitle('');
+    if (process.platform === 'darwin') tray.setTitle('');
     tray.setToolTip('Codex Manager — CLI not linked');
     return;
   }
   const primary = current.quota?.primary;
   const left = primary && typeof primary.used_percent === 'number' ? Math.round(100 - primary.used_percent) : null;
-  tray.setTitle(left === null ? '' : `${left}%`, { fontType: 'monospacedDigit' });
+  if (process.platform === 'darwin') tray.setTitle(left === null ? '' : `${left}%`, { fontType: 'monospacedDigit' });
   tray.setToolTip(`Codex Manager — ${current.email}\n${quotaSummary(current)}`);
 }
 
@@ -397,8 +457,8 @@ function createTray() {
       buffer: fs.readFileSync(path.join(__dirname, 'assets', 'icon.png')),
     });
   }
-  icon.setTemplateImage(true);
-  tray = new Tray(icon);
+  icon.setTemplateImage(process.platform === 'darwin');
+  tray = new Tray(process.platform === 'darwin' ? icon : nativeImage.createFromPath(path.join(__dirname, 'assets', 'icon.png')).resize({ width: 20, height: 20 }));
   tray.setToolTip('Codex Manager');
   tray.on('click', () => togglePopover());
   tray.on('right-click', () => togglePopover());
@@ -418,11 +478,12 @@ app.whenReady().then(async () => {
     if (!fs.existsSync(uiIndex)) {
       throw new Error('UI bundle is missing. Run `npm run build` (or use `npm run dev` in a terminal).');
     }
-    createTray();
-    await startCore();
-    await updateTrayTitle();
-    startEventNotifications();
-    await createWindow();
+    await startDesktop({
+      showLoading: () => createWindow(true),
+      startCore: async () => { await startCore(); markStartup('core-ready'); },
+      loadApp: async () => { await win.loadURL(BASE); win.show(); markStartup('ui-loaded'); },
+      startBackground: () => { createTray(); startEventNotifications(); },
+    });
     // Development aid: open the menu-bar popover without a click, so its
     // layout can be reviewed and screenshotted.
     if (process.argv.includes('--show-popover')) {

@@ -2,7 +2,7 @@
 
 ## Accounts
 
-**Add account** starts ChatGPT sign-in or accepts an existing Codex auth file /
+**Add account** offers **Open browser** for the default browser and **In app** for a separate sandboxed sign-in window in desktop builds. The waiting screen can reopen the browser or copy the sign-in link. Browser sign-in keeps Manager open while the local callback completes. It also accepts an existing Codex auth file /
 credential bundle. Manager stores credentials encrypted on this computer.
 **Refresh quotas** fetches the service's current usage windows. A refresh error
 is shown on the account instead of being silently treated as available quota.
@@ -76,3 +76,7 @@ but may still contain account metadata; review them before sharing.
 
 Light and dark themes use the same layout. The chosen theme is remembered
 locally. README screenshots use demonstration accounts in a native app window.
+
+## Startup feedback
+
+The desktop shell displays a branded opening screen before waiting for the local core. Quota and tray requests start after the dashboard loads, and the bundled runtime version is read from its manifest instead of launching Node a second time. `startup.log` in Electron's user-data directory records elapsed startup stages without account details or sign-in URLs. Windows cold-start timing still requires measurement on Windows.

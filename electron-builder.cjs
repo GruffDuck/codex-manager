@@ -13,7 +13,7 @@ module.exports = {
   artifactName: '${productName}-${version}-${os}-${arch}.${ext}',
   mac: { category: 'public.app-category.developer-tools', icon: 'electron/assets/icon.icns', target: ['dmg', 'zip'], identity: null },
   dmg: { title: 'Codex Manager', contents: [{ x: 140, y: 160 }, { x: 420, y: 160, type: 'link', path: '/Applications' }] },
-  win: { target: ['nsis', 'zip'], icon: 'electron/assets/icon.png', signAndEditExecutable: false,
+  win: { target: ['nsis', 'zip'], icon: 'electron/assets/icon.png', signExecutable: false,
     artifactName: '${productName}-${version}-win-${arch}.${ext}' },
   nsis: { oneClick: false, perMachine: false, allowToChangeInstallationDirectory: true,
     createDesktopShortcut: true, deleteAppDataOnUninstall: false, runAfterFinish: false,

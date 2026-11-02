@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import { Check, FileJson, FileUp, LogIn, Upload, X } from 'lucide-react';
+import { Check, ExternalLink, FileJson, FileUp, LogIn, Upload, X } from 'lucide-react';
 import { api, post } from '../api';
+import { openSignIn, type SignInDestination } from '../desktop';
 import type { BulkImportResult, LoginSession, State } from '../types';
 
 interface Props {
@@ -22,7 +23,8 @@ export function AddAccountModal({ initialView = 'single', accountCount, onClose,
   const [bulkText, setBulkText] = useState('');
   const [fileName, setFileName] = useState<string | null>(null);
   const [bulkResult, setBulkResult] = useState<BulkImportResult | null>(null);
-  const popup = useRef<Window | null>(null);
+  const [destination, setDestination] = useState<SignInDestination>('browser');
+  const desktop = Boolean(window.codexManager);
   const dialog = useRef<HTMLDivElement>(null);
   const fileInput = useRef<HTMLInputElement>(null);
 
@@ -54,6 +56,7 @@ export function AddAccountModal({ initialView = 'single', accountCount, onClose,
           if (cancelled || next.accounts.length <= accountCount) return;
           const added = next.accounts.find((account) => account.email)?.email;
           onAdded(added ? `Added ${added}.` : 'Account added.');
+          void window.codexManager?.closeSignIn().catch(() => undefined);
           onClose();
         })
         .catch(() => undefined);
@@ -78,16 +81,19 @@ export function AddAccountModal({ initialView = 'single', accountCount, onClose,
     }
   };
 
-  const startLogin = async () => {
+  const launchSignIn = async (session: LoginSession, mode: SignInDestination) => {
+    setDestination(mode);
+    try { await openSignIn(session.url, mode); }
+    catch { notify('Could not open sign-in. Try your browser or copy the sign-in link.', 'err'); }
+  };
+
+  const startLogin = async (mode: SignInDestination) => {
     setBusy('login');
-    popup.current = window.open('about:blank', '_blank', 'width=520,height=720');
     try {
       const session = await post<LoginSession>('/api/login/start');
       setWaiting(session);
-      if (popup.current) popup.current.location.href = session.url;
-      else window.location.href = session.url;
+      await launchSignIn(session, mode);
     } catch (error) {
-      popup.current?.close();
       notify((error as Error).message, 'err');
       setWaiting(null);
     } finally {
@@ -97,8 +103,14 @@ export function AddAccountModal({ initialView = 'single', accountCount, onClose,
 
   const cancelLogin = async () => {
     setWaiting(null);
-    popup.current?.close();
+    await window.codexManager?.closeSignIn().catch(() => undefined);
     await post('/api/login/cancel').catch(() => undefined);
+  };
+
+  const copySignIn = async () => {
+    if (!waiting) return;
+    try { await navigator.clipboard.writeText(waiting.url); notify('Sign-in link copied.'); }
+    catch { notify('Could not copy the sign-in link.', 'err'); }
   };
 
   const addJson = async () => {
@@ -200,17 +212,22 @@ export function AddAccountModal({ initialView = 'single', accountCount, onClose,
               <div>
                 <h3>Waiting for ChatGPT</h3>
                 <p>
-                  Finish signing in on <code>localhost:{portOf(waiting.redirect_uri)}</code>. The listener closes
-                  itself after ten minutes.
+                  Finish signing in {destination === 'browser' ? 'in your browser' : 'in the sign-in window'}.
+                  Your account will appear here when sign-in completes.
                 </p>
               </div>
             </div>
             <div className="modal-foot">
-              <span className="hint">Port busy? Close any running `codex login` first.</span>
+              <span className="hint">Sign-in expires after ten minutes. Callback: localhost:{portOf(waiting.redirect_uri)}</span>
               <div className="foot-actions">
-                <button type="button" className="btn btn-sm" onClick={() => window.open(waiting.url, '_blank')}>
-                  Reopen sign-in
-                </button>
+                {desktop ? (
+                  <button type="button" className="btn btn-sm" onClick={() => void launchSignIn(waiting, 'browser')}>
+                    <ExternalLink size={13} /> Open in browser
+                  </button>
+                ) : (
+                  <a className="btn btn-sm" href={waiting.url} target="_blank" rel="noopener noreferrer">Open in browser</a>
+                )}
+                <button type="button" className="btn btn-sm btn-ghost" onClick={() => void copySignIn()}>Copy link</button>
                 <button type="button" className="btn btn-sm btn-ghost" onClick={() => void cancelLogin()}>
                   Cancel
                 </button>
@@ -225,16 +242,21 @@ export function AddAccountModal({ initialView = 'single', accountCount, onClose,
               </span>
               <div className="option-copy">
                 <h3>Sign in with ChatGPT</h3>
-                <p>Same OAuth client and loopback callback as the Codex CLI. PKCE, no password sharing.</p>
+                <p>Choose your default browser or a separate sign-in window. Manager never asks for your password.</p>
               </div>
               <button
                 type="button"
                 className="btn btn-sm btn-primary"
                 disabled={busy !== null}
-                onClick={() => void startLogin()}
+                onClick={() => void startLogin('browser')}
               >
-                Open sign-in
+                <ExternalLink size={13} /> Open browser
               </button>
+              {desktop ? (
+                <button type="button" className="btn btn-sm" disabled={busy !== null} onClick={() => void startLogin('app')}>
+                  In app
+                </button>
+              ) : null}
             </div>
 
             <div className="option">
@@ -290,7 +312,7 @@ export function AddAccountModal({ initialView = 'single', accountCount, onClose,
             </div>
 
             <div className="modal-foot">
-              <span className="hint">Tokens never leave this machine.</span>
+              <span className="hint">Stored credentials are encrypted on this computer.</span>
               <button type="button" className="btn btn-sm btn-ghost" onClick={onClose}>
                 Close
               </button>
