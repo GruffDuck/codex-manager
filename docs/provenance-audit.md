@@ -1,69 +1,47 @@
-# Kaynak ve lisans incelemesi
+# Source and license review
 
-Tarih: 2026-11-02. İncelenen ürün: Codex Manager 0.1.0.
+Date: **2026-11-02**. Product: **Codex Manager 0.1.0**.
 
-## Sonuç
+## Finding
 
-Yerel Antigravity Manager kopyasıyla yapılan karşılaştırmada, Codex Manager'a
-alınmış belirgin bir uygulama işlevi veya birebir aynı dosya saptanmadı.
-Bu sonuç **kodun tamamen özgün olduğunu ispatlamaz**. Üçüncü taraf kütüphane,
-ikon ve font kullanımı vardır; bunların lisansları korunmalıdır.
+Comparison against a local Antigravity Manager checkout found no exact application-file matches or clear copied application implementation. This **does not prove complete originality**. The project uses third-party libraries, icons and fonts, whose licenses must be retained.
 
-Ana proje lisansı sahibinin tercihiyle **CC BY-NC-SA 4.0** olarak korundu.
-Ticari olmayan kullanım, değişiklik ve paylaşım mümkündür; atıf, değişikliklerin
-belirtilmesi ve paylaşılan uyarlamalarda aynı lisans koşulları gerekir.
-Bu lisans bir yazılım lisansı olarak özel tasarlanmamıştır ve ticari kullanım
-kısıtı nedeniyle proje OSI tanımında açık kaynak olarak tanıtılmamalıdır.
+The owner selected **CC BY-NC-SA 4.0** for project contributions. Because it restricts commercial use, the project is described as source-available rather than OSI open source. Creative Commons licenses are not specifically designed for software.
 
-## Kapsam ve yöntem
+## Scope and method
 
-- Üründeki 43 adet `.ts`, `.tsx`, `.js`, `.cjs`, `.mjs`, `.css`, `.html`, `.svg`
-  dosyası, Antigravity Manager'daki aynı uzantılı 1.511 dosyayla karşılaştırıldı.
-- `node_modules`, `.git`, `dist`, `.vite`, `.taste-skill`, `coverage` hariç tutuldu.
-- Yorumlar ve boşluk farkları kısmen giderilerek 25 token uzunluğundaki ortak
-  diziler tarandı; aday dosya çiftlerinde en uzun ortak token dizisi ölçüldü.
-- Kaynak ve varlık dosyalarında SHA-256 ile birebir dosya eşleşmesi arandı.
-  Ana `LICENSE` ve npm kilit dosyası bu birebir karşılaştırma sonucundan hariçtir.
-- Bulunan anlamlı adaylar elle incelendi. Protokol alanları ve standart
-  programlama kalıpları, tek başına kod alıntısı kanıtı olarak değerlendirilmedi.
+- Compared 43 product `.ts`, `.tsx`, `.js`, `.cjs`, `.mjs`, `.css`, `.html` and `.svg` files against 1,511 reference files with matching extensions.
+- Excluded `node_modules`, `.git`, `dist`, `.vite`, `.taste-skill` and `coverage`.
+- Partially normalized comments and whitespace, searched for shared 25-token sequences, and measured the longest common token sequence in candidate pairs.
+- Checked SHA-256 for exact source/asset matches. The main LICENSE and npm lockfile were excluded from that exact-match finding.
+- Manually reviewed meaningful candidates. Protocol fields and conventional programming patterns were not treated as independent evidence of copying.
 
-Makine çıktısı, adaylar ve ürün dosya özetleri:
-[provenance-audit.json](provenance-audit.json).
+Machine output, candidates and the reviewed product-file hashes are preserved in [provenance-audit.json](provenance-audit.json). This report describes that snapshot, not a new exhaustive scan of subsequent changes.
 
-## Bulunan benzerlikler
+## Similarities found
 
-| Alan | Bulgu | Değerlendirme |
+| Area | Observation | Assessment |
 | --- | --- | --- |
-| Tam dosyalar | Birebir eşleşen ürün dosyası bulunmadı | Ana lisans ve kilit dosyası hariç; dış bağımlılıklar tarama dışında |
-| Erişilebilirlik CSS'i | En uzun ortak dizi 57 token; `prefers-reduced-motion` bloğu | Yaygın animasyon azaltma kalıbı; kökenini tek başına belirlemez |
-| Test sunucuları | 27–29 token; `server.listen(0, '127.0.0.1', resolve)` | Standart Node test kalıbı; bazı eşleşmeler bu inceleme sırasında eklenen testte çıktı |
-| React alanı | 29 token; Enter ile `event.currentTarget.blur()` | Kısa, yaygın olay işleyicisi |
-| Port doğrulama | 26 token; 1024–65535 aralığında Zod doğrulaması | Standart port aralığı ve API kullanımı |
-| Diğer adaylar | Kısa HTML başlangıç iskeleti, JSON hata cevabı, HTTP callback | Belirgin bir özgün uygulama bloğu saptanmadı |
+| Complete files | No exact product-file match | Excludes the main license, lockfile and external dependencies. |
+| Accessibility CSS | Longest sequence: 57 tokens in `prefers-reduced-motion` | Common reduced-animation pattern; not proof of origin. |
+| Test servers | 27–29 tokens around `server.listen(0, '127.0.0.1', resolve)` | Standard Node test pattern; some matches appeared in tests added during the review. |
+| React field | 29 tokens around Enter and `event.currentTarget.blur()` | Short conventional event handler. |
+| Port validation | 26 tokens validating 1024–65535 through Zod | Conventional range and library usage. |
+| Other candidates | Short HTML scaffolding, JSON errors and HTTP callbacks | No distinctive application block identified. |
 
-Toplam 14 dosya çifti 25 token eşiğini geçti. Bu, 14 alıntı kod parçası olduğu
-anlamına gelmez; aynı kısa kalıp birden fazla referans dosyasında bulunabilir.
+Fourteen file pairs exceeded the 25-token threshold. This does not mean fourteen copied snippets: one short conventional pattern can occur in several reference files.
 
-## Mimari esin ve protokol bilgisi
+## Architectural inspiration and protocol information
 
-Yerel tasarım belgeleri, ayrı core süreci, yerel gateway ve hesap havuzu
-mimarisinde Antigravity Manager'ın incelendiğini açıkça belirtiyor. Bu esin,
-kaynak kod kopyasıyla aynı şey değildir. README'deki kesin “hiçbir kaynak kodu
-kopyalanmamıştır” iddiası, bu incelemenin desteklediği sınırlı ifadeyle değiştirildi.
+Local design documents explicitly record reviewing Antigravity Manager's separate core, gateway and account-pool architecture. Architectural inspiration is distinct from source-code copying. An earlier categorical originality claim was replaced with the narrower finding supported by this review.
 
-Yerel blueprint ayrıca bazı OAuth / plan uçlarının üçüncü taraf bir Codex
-Manager ikili dosyasından gözlemlendiğini kaydediyor. İlgili ikili bu incelemede
-karşılaştırılmadı. Protokol uçlarını gözlemlemek tek başına kod kopyalandığını
-göstermez; üçüncü taraf ikilinin lisansı ve kullanım koşulları hakkında bu
-inceleme bir hüküm vermez.
+The local blueprint also records observing some OAuth/plan endpoints in a third-party Codex Manager binary. That binary was not compared in this review. Observing protocol endpoints alone does not establish source copying, and this review reaches no conclusion about that binary's license or terms.
 
-## Üçüncü taraf içerik
+## Third-party content
 
-İlk inceleme anındaki `package-lock.json` içinde 267 harici paket kaydı vardı
-(aşağıdaki tablo o anın görüntüsüdür; canlı bağlantı / paketleme geliştirmesinden
-sonraki güncel envanter `dependency-licenses.json` dosyasındadır):
+The initial lockfile snapshot contained 267 external package records:
 
-| Lisans beyanı | Kayıt sayısı |
+| Declared license | Records |
 | --- | ---: |
 | MIT | 237 |
 | ISC | 14 |
@@ -73,36 +51,19 @@ sonraki güncel envanter `dependency-licenses.json` dosyasındadır):
 | CC-BY-4.0 | 1 |
 | MIT OR CC0-1.0 | 1 |
 
-Bunlar paket sayılarıdır, uygulamaya paketlenen modül sayısı değildir.
-Geliştirme ve platforma özel isteğe bağlı paketler de bu sayıya dahildir.
-CC-BY-4.0 kaydı `caniuse-lite` verisidir.
+These are package records, including development and optional platform packages, not a count of shipped modules. The CC-BY-4.0 record is `caniuse-lite` data. See the current [dependency inventory](dependency-licenses.json) for the later packaging snapshot.
 
-- Lucide ikonlarının ISC ve Feather kökenli ikonların MIT bildirimleri korunur.
-- IBM Plex fontları için eksik OFL metni resmi IBM deposundan eklendi.
-- Başlıca doğrudan kullanılan paketlerin yerel lisans/bildirimleri eklendi.
-- Electron paketlemesinde Chromium'un kendi üçüncü taraf bildirimleri de korunmalıdır.
-- Yeni ana proje lisansı, üçüncü tarafların lisanslarını veya telif sahipliğini değiştirmez.
+Lucide/Feather notices, IBM Plex's OFL and direct dependency license texts have been retained. Electron distributions must retain Chromium notices as well. The project license does not change third-party copyrights or licenses. See [third-party notices](../THIRD_PARTY_NOTICES.md).
 
-Ayrıntılar: [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md).
-Envanter: [dependency-licenses.json](dependency-licenses.json).
+## Limitations and outstanding work
 
-## Sınırlamalar ve yayımdan önce kalanlar
+This comparison does not cover the whole internet, every historical version or substantially transformed/renamed code. It did not perform visual similarity analysis of binary assets; differing hashes do not establish original design. Font binaries have not been traced to a specific upstream release. Package-declared licenses are not an independent legal review.
 
-Bu inceleme bütün interneti, eski sürümlerin tamamını veya yeniden adlandırılmış
-ve önemli ölçüde dönüştürülmüş kodu kapsamıyor. İkili varlıklarda görsel benzerlik
-analizi yapılmadı; eşit SHA-256 bulunmaması özgün tasarım kanıtı değildir.
-Font dosyalarının belirli bir upstream sürümüne kadar kökeni doğrulanmadı.
-Paketlerin beyan ettiği lisanslar bağımsız bir hukuki inceleme değildir.
+Complete font/icon provenance records and review the notices included in each distribution before a stable release. Any later borrowed source should record its file, source, author, license and modifications. Secret scanning, Git history review and OAuth distribution terms require separate checks from source similarity.
 
-Yayımdan önce font / ikon kaynağı kayıtları tamamlanmalı, üretilen masaüstü
-paketindeki geçişli bağımlılık bildirimleri denetlenmeli ve yeni bir kaynak
-alıntısı eklenirse dosya bazında kaynak, yazar, lisans ve değişiklikler yazılmalıdır.
-Git geçmişindeki gizli bilgiler ve OAuth dağıtım koşulları bu kaynak benzerliği
-incelemesinden ayrı kontrol edilmelidir.
+## References
 
-## Lisans kaynakları
-
-- CC BY-NC-SA 4.0: https://creativecommons.org/licenses/by-nc-sa/4.0/
-- CC'nin yazılım açıklaması: https://creativecommons.org/faq/#can-i-apply-a-creative-commons-license-to-software
-- OSI tanımı: https://opensource.org/osd
-- IBM Plex lisansı: https://github.com/IBM/plex/blob/master/LICENSE.txt
+- [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+- [Creative Commons guidance on software](https://creativecommons.org/faq/#can-i-apply-a-creative-commons-license-to-software)
+- [Open Source Definition](https://opensource.org/osd)
+- [IBM Plex license](https://github.com/IBM/plex/blob/master/LICENSE.txt)

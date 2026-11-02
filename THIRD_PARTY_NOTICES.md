@@ -1,15 +1,12 @@
-# Üçüncü taraf bildirimleri
+# Third-party notices
 
-Codex Manager projesinin kendi katkıları CC BY-NC-SA 4.0 altında sunulur.
-Aşağıdaki üçüncü taraf bileşenler kendi lisanslarına tabidir. Projenin ticari
-kullanım kısıtı bu bileşenlerin bağımsız olarak sahip olduğu hakları değiştirmez.
+Codex Manager's own contributions are licensed under CC BY-NC-SA 4.0. Third-party components retain their own licenses. The project's noncommercial restriction does not change the independent rights granted by those components.
 
-## Başlıca JavaScript bileşenleri
+## Main JavaScript components
 
-Bu tablo 2026-11-02 tarihinde kurulu sürümleri gösterir; geliştirme araçları da
-şeffaflık için listelenmiştir. Lisans metinleri değiştirilmeden kopyalanmıştır.
+Installed versions reviewed on 2026-11-02 are listed below, including development tools for transparency. License texts were copied without modification.
 
-| Bileşen | Sürüm | Lisans | Lisans / bildirim metni |
+| Component | Version | License | License / notice text |
 | --- | --- | --- | --- |
 | fastify | 5.12.7 | MIT | [LICENSE](licenses/npm/fastify--LICENSE) |
 | lucide-react | 1.65.0 | ISC | [LICENSE](licenses/npm/lucide-react--LICENSE) |
@@ -24,39 +21,22 @@ Bu tablo 2026-11-02 tarihinde kurulu sürümleri gösterir; geliştirme araçlar
 | smol-toml | 1.9.1 | BSD-3-Clause | [LICENSE](licenses/npm/smol-toml--LICENSE) |
 | electron-builder | 26.18.0 | MIT | [LICENSE](licenses/npm/electron-builder--LICENSE) |
 
-Tam kilit dosyası envanteri: [dependency-licenses.json](docs/dependency-licenses.json).
-Bu envanter, geçişli ve platforma özel isteğe bağlı paketleri de içerir;
-yukarıdaki tablo tüm geçişli bağımlılıkların bildirimlerinin eksiksiz bir paketi
-olduğu iddiasını taşımaz. Dağıtım paketi hazırlanırken o pakete giren tüm
-bağımlılıkların gerekli lisans ve bildirimleri de eklenmelidir.
+Full lockfile inventory: [dependency-licenses.json](docs/dependency-licenses.json). It includes transitive and platform-specific optional packages. The table above is not a complete notice bundle for every transitive dependency; distributions must retain the required notices for the components they include.
 
-Paketin 51 üretim bağımlılığı içinde bağımsız LICENSE dosyası taşımayan
-`abstract-logging` 2.0.1, README'sinde yazarının MIT lisans sayfasına işaret eder.
-Bu sayfa değişmeden [MIT lisans bildirimi](licenses/npm/abstract-logging--MIT.html)
-olarak eklendi; paket içindeki README de korunur.
+Among the 51 production dependencies, `abstract-logging` 2.0.1 has no standalone LICENSE file and its README links to its author's MIT license page. An unchanged copy is included as the [MIT notice](licenses/npm/abstract-logging--MIT.html); its README is retained in the package.
 
-Lucide lisans metni, Feather kökenli ikonlar için MIT bildirimini de içerir.
-Electron dağıtımındaki `LICENSE` ve `LICENSES.chromium.html` dosyaları masaüstü
-paketlerinde korunmalıdır; Chromium'un bildirimleri Electron'un kendi MIT
-lisans dosyasının yerine geçmez.
+Lucide's license includes the MIT notice for Feather-derived icons. Electron distributions must retain both `LICENSE` and `LICENSES.chromium.html`; Chromium's notices do not replace Electron's MIT license.
 
-## IBM Plex fontları
+## IBM Plex fonts
 
-`ui/public/fonts/` ve `electron/assets/fonts/` altında IBM Plex Sans / Mono adıyla
-kullanılan fontlar bulunur. IBM Plex, SIL Open Font License 1.1 altında sunulur.
+Font files used as IBM Plex Sans / Mono are located in `ui/public/fonts/` and `electron/assets/fonts/`. IBM Plex is distributed under the SIL Open Font License 1.1.
 
-- Kaynak: https://github.com/IBM/plex
-- Telif / lisans: [IBM Plex OFL](licenses/ibm-plex/OFL.txt)
+- [Upstream source](https://github.com/IBM/plex)
+- [IBM Plex OFL](licenses/ibm-plex/OFL.txt)
 - Copyright © 2017 IBM Corp. with Reserved Font Name "Plex".
 
-Fontlar ana projenin ticari kullanım kısıtına geçirilmez. Bu incelemede font
-ikili dosyalarının belirli bir IBM sürümüne kadar tedarik zinciri doğrulaması
-yapılmamıştır; yayımlamadan önce kaynağı kayıtlı dosyalarla doğrulanmalıdır.
+The fonts are not relicensed under the project's noncommercial restriction. This review did not trace the binary files to a specific upstream IBM release; that provenance check remains outstanding.
 
 ## Antigravity Manager
 
-Ayrı core süreci, yerel gateway ve hesap havuzu yaklaşımından esinlenilmiştir.
-Yerel karşılaştırmada belirgin bir uygulama kodu kopyası saptanmamıştır;
-yöntem, kısa ortak kalıplar ve sınırlamalar [inceleme raporunda](docs/provenance-audit.md)
-belgelenmiştir. Bu atıf, Antigravity kodunun dağıtıldığı veya yazarlarının bu
-projeyi onayladığı anlamına gelmez.
+The separate core process, local gateway and account-pool architecture were inspired by Antigravity Manager. A local comparison found no clear copied application implementation. The [provenance review](docs/provenance-audit.md) records the method, short common patterns and limitations. This attribution does not imply that Antigravity source is distributed here or that its authors endorse this project.

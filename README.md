@@ -1,209 +1,239 @@
-# Codex Manager
+<p align="center">
+  <img src="ui/public/logo.svg" width="72" height="72" alt="Codex Manager logo">
+</p>
+<h1 align="center">Codex Manager</h1>
+<p align="center">Your Codex accounts, quotas and local routing in one desktop app.</p>
+<p align="center">
+  <a href="https://github.com/GruffDuck/codex-manager/releases/tag/v0.1.0-preview.1"><img alt="Release: preview" src="https://img.shields.io/badge/release-0.1.0_preview-blue?style=flat-square"></a>
+  <a href="LICENSE"><img alt="License: CC BY-NC-SA 4.0" src="https://img.shields.io/badge/license-CC_BY--NC--SA_4.0-64748b?style=flat-square"></a>
+  <a href="docs/validation.md"><img alt="Validation: 35 tests passed on macOS" src="https://img.shields.io/badge/macOS_tests-35_passed-15803d?style=flat-square"></a>
+</p>
+<p align="center">
+  <a href="#download">Download</a> · <a href="#getting-started">Getting started</a> · <a href="#screenshots">Screenshots</a> · <a href="#documentation">Documentation</a>
+</p>
 
-ChatGPT / Codex hesaplarını tek yerden yöneten, kota takibi yapan ve Codex CLI'ın önüne
-şeffaf bir **Responses API gateway'i** koyan masaüstü uygulaması.
+![Codex Manager desktop application showing saved accounts and their remaining quotas](docs/images/accounts-light.jpg)
 
-Aynı mimari desen: **ayrı bir core süreci** (Fastify + SQLite) + **yerel API gateway** +
-**ince bir masaüstü kabuk** (Electron). Core tek başına da çalışır; UI olmadan da
-`curl` ile kullanılabilir.
+<p align="center"><sub>Native desktop screenshot with synthetic demonstration accounts. No personal account data is shown.</sub></p>
 
-```
-┌────────────────────┐   /v1/responses    ┌──────────────────────────┐
-│  Codex CLI / IDE   │ ─────────────────▶ │  Codex Manager core      │
-│  (Bearer sk-…)     │ ◀───────────────── │  :8055  Fastify gateway  │
-└────────────────────┘   SSE / JSON       │  ├─ hesap seçimi (lease) │
-                                          │  ├─ token yenileme       │
-┌────────────────────┐      /api/*        │  ├─ kota takibi          │
-│  UI (React/Vite)   │ ─────────────────▶ │  └─ SQLite (node:sqlite) │
-└────────────────────┘                    └───────────┬──────────────┘
-                                                      │ Bearer + chatgpt-account-id
-                                          ┌───────────▼──────────────┐
-                                          │ chatgpt.com/backend-api  │
-                                          └──────────────────────────┘
-```
+Codex Manager keeps multiple ChatGPT/Codex logins on your computer, shows their
+reported quotas and helps you choose the next account. On macOS, switching can
+close Codex, save the selected login and reopen Codex. An optional local gateway
+can distribute Responses API requests across eligible accounts.
 
-## Neler yapar
+> **Preview software.** macOS Apple Silicon packages have passed a packaged
+> startup check. Windows x64 packages are available for testing, but Windows
+> installation and startup have not yet been validated. Automatic Codex
+> close/reopen is currently **macOS-only**. Packages are unsigned; macOS packages
+> are not notarized.
 
-- **Çoklu hesap**: ChatGPT OAuth ile ekleme (Codex CLI ile aynı `client_id`, aynı
-  `localhost:1455/auth/callback`, PKCE), mevcut `~/.codex/auth.json`'ı içe aktarma veya
-  token paketini yapıştırma.
-- **Kota görünürlüğü**: 5 saatlik ve haftalık pencereler, `used_percent`, sıfırlanma
-  zamanı, plan tipi, kredi bilgisi. Kaynak: `GET /backend-api/wham/usage` ve her
-  yanıtta gelen `x-codex-*` başlıkları.
-- **Kota ağırlıklı rotasyon**: boş kotası olan hesap daha çok trafik alır (smooth
-  weighted round-robin). 429'da hesap işaretlenir, cooldown bitince geri döner.
-- **Şeffaf vekil**: gövde aynen iletilir; yalnızca `authorization` ve
-  `chatgpt-account-id` değiştirilir. SSE akışı olduğu gibi aktarılır.
-- **Token yenileme**: JWT süresi dolmak üzereyse veya upstream 401 dönerse refresh
-  token ile bir kez yenilenir, sonuç şifreli olarak saklanır.
-- **CLI senkronizasyonu**: `Use in CLI` hesabı `~/.codex/auth.json`'a atomik yazar
-  (önce `.codex-manager.bak` yedeği alınır).
-- **`config.toml` yazıcı**: `[model_providers.codex_manager]` bloğunu ekler, mevcut
-  kök `model` değerini korur, yedeği alır ve tek tuşla geri alır.
-- **Trafik günlüğü**: son 500 istek; hangi hesap, hangi model, durum kodu, gecikme.
+## Contents
 
-## Gereksinimler
+- [Download](#download)
+- [What it does](#what-it-does)
+- [Platform support](#platform-support)
+- [Getting started](#getting-started)
+- [Account switching](#account-switching)
+- [Optional gateway](#optional-gateway)
+- [Screenshots](#screenshots)
+- [Privacy and local storage](#privacy-and-local-storage)
+- [Build from source](#build-from-source)
+- [Documentation](#documentation)
+- [License and attribution](#license-and-attribution)
 
-- **Node.js ≥ 23.4** (yerleşik `node:sqlite` için; Node 24 önerilir)
-- npm 10+
-- macOS / Linux / Windows
+## Download
 
-## Kurulum ve çalıştırma
+| Platform | Installer | Alternative |
+| --- | --- | --- |
+| macOS Apple Silicon | [Download DMG](https://github.com/GruffDuck/codex-manager/releases/download/v0.1.0-preview.1/Codex.Manager-0.1.0-mac-arm64.dmg) | [Download ZIP](https://github.com/GruffDuck/codex-manager/releases/download/v0.1.0-preview.1/Codex.Manager-0.1.0-mac-arm64.zip) |
+| Windows x64 · testing preview | [Download Setup EXE](https://github.com/GruffDuck/codex-manager/releases/download/v0.1.0-preview.1/Codex.Manager-Setup-0.1.0-win-x64.exe) | [Download ZIP](https://github.com/GruffDuck/codex-manager/releases/download/v0.1.0-preview.1/Codex.Manager-0.1.0-win-x64.zip) |
 
-```bash
+[Release notes](https://github.com/GruffDuck/codex-manager/releases/tag/v0.1.0-preview.1)
+· [SHA-256 checksums](https://github.com/GruffDuck/codex-manager/releases/download/v0.1.0-preview.1/SHA256SUMS.txt)
+· [All releases](https://github.com/GruffDuck/codex-manager/releases)
+
+Node.js is included in the desktop packages. You do not need Node or npm to use
+an installer. Extract the complete Windows ZIP before opening the app; copying
+only the EXE will omit required files.
+
+## What it does
+
+| Feature | What you get |
+| --- | --- |
+| Multiple accounts | Sign in, import an existing Codex login or import a credential bundle. |
+| Quota visibility | Remaining quota, reset times and plan information reported by the upstream service. |
+| Account switching | On macOS, a controlled close, login update and reopen sequence. |
+| Automatic switching | On macOS, the same restart sequence when the selected login reaches your quota threshold. |
+| Local gateway | Optional quota-weighted routing, token refresh and retries for Responses API requests. |
+| Desktop utilities | Menu-bar access, configurable notifications, light/dark themes and request history. |
+| Import and export | Account metadata, explicitly requested credential exports and diagnostics. |
+
+Quotas are reported values, not estimates. A saved login, the account shown in
+Codex and the account selected for a gateway request are different states;
+Manager does not treat them as interchangeable.
+
+## Platform support
+
+| Capability | macOS Apple Silicon | Windows x64 | Linux |
+| --- | --- | --- | --- |
+| Downloadable package | DMG / ZIP | Setup EXE / ZIP | Build targets only |
+| Packaged startup validation | Passed | Not yet run | Not yet run |
+| Account, quota and gateway UI | Included | Included; awaiting platform testing | Source build |
+| Automatic Codex close/reopen | Implemented; real switch cycle still pending | Not implemented | Not implemented |
+| Signed release / auto-update | Not available | Not available | Not available |
+
+See [validation](docs/validation.md) for the exact checks performed.
+
+## Getting started
+
+1. Install the package for your platform and open Codex Manager.
+2. Select **Add account**. Sign in with ChatGPT or import an existing Codex login.
+3. Refresh quotas to confirm each account's reported availability.
+4. On macOS, select **Switch account** to close Codex, save that login and reopen it.
+5. To switch at quota exhaustion, open **Settings**, choose **Restart Codex**, set
+   the threshold to **0%**, choose the check interval and enable automatic switching.
+
+Automatic switching is off by default on a fresh installation. The default
+threshold is 0%, with a 60-second check interval. A usable alternative account
+with known remaining quota is required. If Codex is already closed, automatic
+switching leaves it closed.
+
+## Account switching
+
+![Account switching flow: check account, close Codex, save login, reopen and verify startup](docs/images/account-switching.svg)
+
+The account is checked before Codex is asked to quit. Manager waits for Codex
+and its child processes to exit before writing credentials. A refused quit
+leaves the login unchanged. If reopening or startup checks fail, Manager tries
+to restore the previous files and reopen the previous session.
+
+Switching can interrupt an active reply. Startup confirmation checks that Codex
+is running and the selected login remains in its auth file; it does **not**
+independently read the account displayed inside a private Codex desktop session.
+It also does not automatically resume an interrupted conversation.
+
+[Switching behavior and recovery](docs/desktop-integration.md)
+
+## Optional gateway
+
+![Architecture showing the desktop UI, local Manager core, optional client routing and encrypted account storage](docs/images/architecture.svg)
+
+Enable the gateway from **Gateway** when you want eligible accounts to share
+Responses API traffic. Manager backs up your Codex configuration and writes a
+local provider. Restart Codex to load that provider. You can restore the previous
+configuration from the same page.
+
+The gateway selects accounts per request using quota-weighted round-robin. It
+refreshes rejected tokens once, cools down rate-limited accounts and retries
+eligible failures within the configured attempt limit. Gateway routing does
+not change the account displayed in the Codex desktop app.
+
+[Gateway configuration and API reference](docs/gateway.md)
+
+## Screenshots
+
+These images were captured from a **native Electron application window** running
+the production UI with a separate, read-only demonstration backend. Account
+addresses, quotas and request history are synthetic. They are not browser
+screenshots or generated UI mockups.
+
+<details>
+<summary><strong>Accounts in dark mode</strong></summary>
+
+![Accounts and quota windows in the native desktop app, dark theme](docs/images/accounts-dark.jpg)
+
+</details>
+
+<details>
+<summary><strong>Gateway settings</strong></summary>
+
+![Optional local gateway configuration in the native desktop app](docs/images/gateway.jpg)
+
+</details>
+
+<details>
+<summary><strong>Automatic switching and notifications</strong></summary>
+
+![Automatic switching and notification settings in the native desktop app](docs/images/settings.jpg)
+
+</details>
+
+<details>
+<summary><strong>Request history</strong></summary>
+
+![Local Responses API request history in the native desktop app](docs/images/traffic.jpg)
+
+</details>
+
+## Privacy and local storage
+
+Account credentials stored by Manager are encrypted with AES-256-GCM. The local
+key is stored separately from the SQLite database. The gateway and management
+API listen on `127.0.0.1`; gateway requests require a local API key. Management
+requests are restricted to local hostnames and matching browser origins.
+
+| Location | Purpose |
+| --- | --- |
+| `~/.codex-manager/data.db` | Accounts, encrypted credential bundles, quotas and request history. |
+| `~/.codex-manager/secret.key` | Local encryption key. Keep it private and back it up with the database. |
+| `~/.codex-manager/config.json` | Gateway configuration and local API key. |
+| `$CODEX_HOME/auth.json` | Codex's selected login; defaults to `~/.codex/auth.json`. |
+
+Codex's auth file and credential exports contain readable credentials; Manager's
+at-rest encryption does not encrypt those files. Metadata exports omit tokens.
+Do not publish credential exports, auth files, the database or the local key.
+
+[Security policy](SECURITY.md)
+
+## Build from source
+
+Use Node.js 24 and npm. Building the macOS lifecycle helper also requires Xcode
+Command Line Tools. Binary packages include the runtime and compiled helper.
+
+```sh
+git clone https://github.com/GruffDuck/codex-manager.git
 cd codex-manager
-npm install
-npm run dev          # core :8055 (tsx watch) + UI :5173 (Vite)
+npm ci
+npm run dev
 ```
 
-Üretim derlemesi ve tek süreç:
-
-```bash
-npm run build        # core/dist + ui/dist
-npm start            # http://127.0.0.1:8055
-```
-
-Masaüstü kabuk (Electron, core'u kendisi başlatır):
-
-```bash
-npm run desktop
-```
-
-İlk açılışta `~/.codex-manager/` oluşur:
-
-| Dosya | İçerik |
+| Command | Purpose |
 | --- | --- |
-| `config.json` | port, API anahtarı, upstream, deneme sayısı (0600) |
-| `secret.key` | AES-256-GCM anahtarı (0600) |
-| `data.db` | hesaplar (şifreli token blob'u), kotlar, istek günlüğü |
+| `npm run dev` | Start the core and development UI. |
+| `npm run desktop` | Build and run the native Electron shell. |
+| `npm test` | Run unit, mock gateway and lifecycle tests in isolated profiles. |
+| `npm run typecheck` | Check core and UI TypeScript. |
+| `npm run package` | Package the host macOS/Linux target. |
+| `npm run package:win` | Build Windows x64 Setup EXE and ZIP. |
 
-Port değiştirmek için: `CODEX_MANAGER_PORT=8056 npm start` (Electron da aynı değişkeni okur).
+[Build and packaging guide](docs/packaging.md) · [Contribution guide](CONTRIBUTING.md)
 
-## Codex'i gateway'e bağlama
+## Documentation
 
-**Switch account** Codex'i normal çıkış yoluyla kapatır, seçilen hesabı kaydeder
-ve Codex'i yeniden açar. **Auto-switch** aynı işlemi kota eşiğinde yapar;
-varsayılan eşik %0'dır. Bu işlem sürmekte olan bir yanıtı kesebilir.
-[Hesap değiştirme, doğrulama ve hata davranışı](docs/desktop-integration.md).
+- [Feature guide](docs/features.md)
+- [Account switching and automatic restart](docs/desktop-integration.md)
+- [Gateway configuration and API](docs/gateway.md)
+- [Build, packaging and signing](docs/packaging.md)
+- [Architecture and the Electron/Rust trade-off](docs/architecture.md)
+- [Validation record](docs/validation.md)
+- [Source provenance review](docs/provenance-audit.md)
+- [Third-party notices](THIRD_PARTY_NOTICES.md)
 
-Kurulabilir preview paketleri: macOS/Linux için `npm run package`, Windows x64
-için `npm run package:win`. Windows native kapatıp-açma henüz desteklenmez.
-[Paketleme ve imzalama durumu](docs/packaging.md).
+## License and attribution
 
-UI'daki **Write config.toml** düğmesi `~/.codex/config.toml` dosyasına iki yönetilen bölge ekler
-(TOML'de kök anahtarlar tablo başlığından sonra gelemediği için ayrı ayrı):
+Project contributions are licensed under **CC BY-NC-SA 4.0**. Noncommercial use,
+modification and sharing are permitted subject to attribution, change notices
+and share-alike requirements. Commercial use is not granted by this license.
+Third-party components retain their own licenses.
 
-```toml
-# >>> codex-manager (root keys: managed)
-model_provider = "codex_manager"
-model = "gpt-6.1-sol"
-# <<< codex-manager (root keys)
+Because commercial use is restricted, this project is **source-available**,
+rather than open source under the OSI definition. Creative Commons licenses are
+not specifically designed for software; this license is the project owner's
+choice. Read the [full license](LICENSE) and [third-party notices](THIRD_PARTY_NOTICES.md).
 
-… senin mevcut ayarların ve tabloların …
+The architecture was inspired by Antigravity Manager. A local comparison found
+no clear copied application implementation, but it is not a proof of complete
+originality; the [review](docs/provenance-audit.md) documents its scope and limits.
 
-# >>> codex-manager (provider: managed)
-[model_providers.codex_manager]
-name = "Codex Manager"
-base_url = "http://127.0.0.1:8055/v1"
-wire_api = "responses"
-requires_openai_auth = false
-http_headers = { Authorization = "Bearer sk-…" }
-# <<< codex-manager (provider)
-```
-
-- Mevcut kök `model` değeri korunur; blok kaldırılınca eski satırlar geri yazılır.
-- Codex çalışıyorsa yeniden başlatın.
-- **Remove block** bloğu siler; ilk yazmadan önceki dosya `config.toml.codex-manager.bak`
-  olarak durur.
-
-Alternatif olarak gateway'i kullanmadan yalnızca hesap değiştirmek isterseniz
-**Use in CLI** hesabı doğrudan `~/.codex/auth.json`'a yazar.
-
-## Uçlar
-
-Gateway (Bearer = `config.json` içindeki `api_key`):
-
-| Uç | Açıklama |
-| --- | --- |
-| `POST /v1/responses` | Codex Responses isteği; SSE veya JSON |
-| `GET /v1/models` | Upstream model listesi (5 dk önbellek) |
-| `GET /v1/usage` | Hesap bazlı kota özeti |
-| `GET /healthz` | Kimlik doğrulamasız sağlık kontrolü |
-
-Yönetim (yalnızca loopback, UI tarafından kullanılır):
-
-`GET /api/state`, `POST /api/accounts/import`, `POST /api/accounts/json`,
-`POST /api/accounts/:id/refresh`, `POST /api/accounts/refresh-all`,
-`POST /api/accounts/:id/switch`, `DELETE /api/accounts/:id`,
-`POST /api/login/start`, `POST /api/login/cancel`, `PATCH /api/config`,
-`POST /api/key/rotate`, `POST /api/codex/config`, `DELETE /api/codex/config`.
-
-İsteğe bağlı başlıklar:
-
-- `x-codex-account: <id | account_id | email>` — isteği tek hesaba sabitler. Hesap
-  uygun değilse **hata döner**, sessizce başka hesaba kaymaz.
-- `x-codex-manager-*` yanıt başlıkları hangi hesabın kullanıldığını ve kaç deneme
-  yapıldığını söyler.
-
-## Rotasyon ve hata davranışı
-
-1. Uygun hesaplar: `active`, veya cooldown'ı geçmiş `rate_limited`, veya cooldown'ı
-   geçmiş `error`. `expired` asla seçilmez.
-2. Seçim: kota ağırlığı (kalan ≥ %75 → 3, ≥ %25 → 2, altı → 1) ile smooth weighted
-   round-robin.
-3. Yanıtlar:
-   - `429` → kota başlıkları işlenir, hesap cooldown'a alınır, sıradaki hesap denenir.
-   - `401` → token bir kez zorla yenilenir; yine 401 ise hesap `expired` işaretlenir.
-   - `5xx` / ağ hatası → sıradaki hesap denenir, hesap cezalandırılmaz.
-   - Tüm denemeler tükenirse son hata gövdesi + `retry-after` döner.
-4. Başarılı her yanıt `x-codex-*` başlıklarıyla kotayı günceller.
-
-## Güvenlik
-
-- Token'lar düz metin yazılmaz: AES-256-GCM, anahtar `~/.codex-manager/secret.key` (0600).
-- Gateway ve API yalnızca `127.0.0.1`'e bağlanır.
-- `/v1/*` sabit zamanlı karşılaştırılan Bearer anahtarı ister.
-- OAuth callback dinleyicisi yalnızca loopback bağlantı kabul eder ve giriş bitince kapanır.
-- Telemetri yok; hiçbir veri OpenAI dışında bir yere gitmez.
-
-## Testler
-
-```bash
-npm test          # birim + gateway entegrasyon testleri (mock upstream)
-node scripts/mock-upstream.mjs 8099   # elle denemek için sahte Codex backend'i
-```
-
-Testler gerçek `~/.codex-manager` dizinine dokunmaz; geçici `HOME` kullanır.
-
-## Sınırlar / yol haritası
-
-- Protokol çevirisi yok: yalnızca Responses API vekillenir (Chat Completions → Responses
-  dönüşümü yok).
-- WebSocket taşıması vekillenmez; Codex HTTP/SSE'ye düşer.
-- macOS/Linux için Node içeren preview paketleme eklendi. İmzalama, notarization,
-  otomatik güncelleme henüz yok. Windows x64 EXE/ZIP preview eklendi; Windows
-  açılış testi ve Windows native hesap yeniden başlatma desteği henüz yok.
-- Kota tahmini yapılmaz; yalnızca upstream'in bildirdiği değerler gösterilir.
-
-## Lisans ve kaynak notu
-
-Projenin kendi katkıları **CC BY-NC-SA 4.0** altında sunulur: ticari olmayan
-amaçlarla kullanabilir, değiştirebilir ve paylaşabilirsiniz. Paylaşımda uygun
-atıf yapılmalı, değişiklikler belirtilmeli ve uyarlamalar aynı lisans koşullarıyla
-paylaşılmalıdır. Ticari kullanım için bu lisans izin vermez.
-
-- [Tam lisans metni](LICENSE)
-- [Lisans özeti](https://creativecommons.org/licenses/by-nc-sa/4.0/)
-- [Üçüncü taraf lisans ve telif bildirimleri](THIRD_PARTY_NOTICES.md)
-- [Yerel kaynak benzerliği incelemesi](docs/provenance-audit.md)
-
-Ticari kullanım kısıtı nedeniyle proje, OSI tanımında açık kaynak değil,
-**kaynağı açık ve ticari olmayan kullanıma yönelik** bir projedir. CC lisansları
-özel olarak yazılım için tasarlanmamıştır; bu lisans proje sahibinin tercihidir.
-Üçüncü taraf kütüphane ve fontlar kendi lisanslarında kalır.
-
-Mimari yaklaşım Antigravity Manager'dan esinlenmiştir. 2026-11-02 tarihli yerel
-incelemede belirgin bir uygulama kodu kopyası saptanmamıştır; bu, bütün kodun
-kökeninin kesin ispatı veya tüm dış kaynakları kapsayan bir tarama değildir.
-
-Bu proje bağımsızdır; OpenAI veya Antigravity Manager ile bağlantılı değildir.
+Codex Manager is an independent project and is not affiliated with or endorsed
+by OpenAI or Antigravity Manager.

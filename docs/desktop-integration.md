@@ -1,78 +1,54 @@
-# Codex hesap değiştirme — kapanış ve yeniden açılış
+# Account switching and automatic restart
 
-## Kullanıcı akışı
+## User flow
 
-Ana hesap düğmesi ve auto-switch aynı `RestartController` işlemini çağırır:
+The primary account button and automatic switching use the same `RestartController`:
 
-1. Seçilen hesabın token'ları ve Codex kurulumu kontrol edilir.
-2. macOS AppKit aracılığıyla Codex'e normal çıkış isteği gönderilir.
-3. Ana uygulama ve ona ait çocuk süreçlerin kapanışı beklenir. Zorla kapatma yoktur.
-4. Giriş ve yapılandırma dosyalarının o andaki halleri şifreli olarak yedeklenir.
-5. Seçilen hesap `auth.json` dosyasına atomik yazılır. Manager gateway ayarı varsa
-   kaldırılır; doğrudan ChatGPT girişi hazırlanır.
-6. Codex aynı `CODEX_HOME` ile açılır.
-7. Üç kontrol boyunca uygulamanın açık kaldığı ve giriş dosyasının seçilen hesapta
-   kaldığı doğrulanır. Sonuç ancak bundan sonra tamamlandı olarak kaydedilir.
+1. Validate the selected account's tokens and locate Codex.
+2. Request a normal quit through macOS AppKit.
+3. Wait for the application and its child processes to exit. No force quit is used.
+4. Encrypt a snapshot of the current authentication and configuration files.
+5. Atomically write the selected login to `auth.json`. Remove Manager's gateway provider when present, preparing direct ChatGPT sign-in.
+6. Open Codex with the same `CODEX_HOME`.
+7. Across three startup checks, confirm that Codex remains running and the auth file still contains the selected login. Only then record completion.
 
-Bu akış açık Codex sunucusuna canlı RPC bağlantısı gerektirmez. Kodun içinde
-korunan deneysel canlı bağlantı yolu ana hesap düğmesi veya auto-switch için
-kullanılmaz.
+![Account switching lifecycle](images/account-switching.svg)
 
-## API ve ilerleme
+The primary flow does not require a live RPC connection to Codex's server. An older experimental shared-server bridge remains in the source but is not used by the primary button or automatic switching.
 
-- `POST /api/accounts/:id/use-in-codex`: kapat → hesabı kaydet → aç.
-- `GET /api/codex/restart`: destek, uygulama durumu ve son işlem aşaması.
-- `GET /api/state`: `codex_restart` alanı arayüz için aynı durumu içerir.
-- `POST /api/accounts/:id/prepare`: yalnızca dosyayı hazırlar; elle açılış içindir.
-- `POST /api/accounts/:id/use-in-cli`: yalnızca CLI giriş dosyasını değiştirir.
-- `POST /api/accounts/:id/live-switch`: ortak sunuculu kurulumlar için deneysel
-  eski yol; ana arayüzde kullanılmaz.
+## API and progress
 
-Aşamalar: `preparing`, `closing`, `writing`, `opening`, `checking`, `completed`,
-`failed`. Arayüz işlem sürerken diğer hesap düğmelerini kilitler. Core düzeyinde
-ortak kilit, CLI yazımı ile yeniden başlatmanın çakışmasını da engeller.
+| Endpoint | Behavior |
+| --- | --- |
+| `POST /api/accounts/:id/use-in-codex` | Close, save the login and reopen. |
+| `GET /api/codex/restart` | Support, installation, running state and latest operation. |
+| `GET /api/state` | Includes `codex_restart` for the UI. |
+| `POST /api/accounts/:id/prepare` | Prepare files for a later manual launch. |
+| `POST /api/accounts/:id/use-in-cli` | Update the CLI login file only. |
+| `POST /api/accounts/:id/live-switch` | Experimental shared-server path; not used by the primary UI. |
 
-## Auto-switch
+Progress states are `preparing`, `closing`, `writing`, `opening`, `checking`, `completed` and `failed`. The UI disables competing account actions during an operation. A core mutation lock also prevents CLI writes from overlapping a restart.
 
-`Restart Codex` hedefi, seçili giriş dosyasındaki hesabın en dar kota penceresini
-izler. Varsayılan eşik %0, kontrol aralığı 60 saniyedir. Uygun bir sonraki hesabın
-bilinen ve eşikten yüksek kalan kotası olmalıdır. Henüz kota bilgisi olmayan
-hesaba veya kullanılamayan hesaba rastgele geçilmez.
+## Automatic switching
 
-Codex kullanıcı tarafından kapatılmışsa auto-switch onu tekrar açmaz. Yönetilen
-bir hesap seçili değilse önce kullanıcıdan bir hesap seçmesi beklenir.
-Aktif yanıtın bitmesini bekleme koşulu yoktur: kota eşiğine ulaşınca uygulama
-normal çıkış akışıyla kapanır. Bu, sürmekte olan bir yanıtı kesebilir.
+Automatic switching is disabled by default. The **Restart Codex** target watches the tightest active quota window of the login selected in Codex's auth file. Defaults are a **0%** threshold and a **60-second** check interval. An alternative must be usable and have known headroom above the threshold; unknown quotas do not qualify.
 
-Yeniden başlatma başarısızsa olay kaydı ve tercihe bağlı bildirim oluşturulur.
-Aynı hedef için otomatik yeniden deneme en az on dakika durdurulur; manuel
-tekrar deneme mümkündür. Başka bir hesap değişikliği sürüyorsa işlem ertelenir.
-`CLI only` hedefi uygulamayı yeniden başlatmaz; yalnızca giriş dosyasını hazırlar.
+If Codex is closed, the automatic policy leaves it closed. If no managed login is selected, the user must select one first. The policy does not wait for an active reply to finish, so a restart can interrupt work.
 
-## Hata davranışı
+Failures create an activity entry and, when enabled, a notification. Automatic retries for the same target pause for at least ten minutes; manual retries remain available. A competing mutation defers the check. **CLI only** changes the login file without restarting the desktop app.
 
-- Token yenilenemez veya Codex bulunamazsa açık uygulamaya dokunulmaz.
-- Codex normal çıkışı kabul etmez veya çocuk süreçler kapanmazsa giriş değiştirilmez.
-- Yazma / açma / açılış kontrolü başarısızsa, gerekirse kısmen açılmış Codex
-  kapatılır, önceki dosyalar geri yazılır ve önceden açıksa eski girişle açılır.
-- Kurtarma da başarısızsa arayüz bunu açıkça söyler; başarı iddia edilmez.
-- Geri dönüş verisi veritabanında AES-256-GCM ile şifrelenir ve başarılı işlem /
-  başarılı geri dönüşten sonra temizlenir. Tam süreç veya makine çöküşünden
-  otomatik kurtarma henüz uygulanmamıştır; yarıda kalan işlem Manager'da görünür.
+## Failure and recovery
 
-## Sınırlar ve doğrulama
+- Token refresh or installation detection failures leave the running app untouched.
+- A refused quit or remaining child process prevents credential changes.
+- Write, launch or startup-check failures trigger a recovery attempt: close a partially opened instance when necessary, restore previous files, and reopen the previous login if Codex was originally running.
+- A failed recovery is reported explicitly.
+- Recovery snapshots use AES-256-GCM in the database and are cleared after successful completion or recovery. Automatic recovery after a full process or machine crash is not implemented; interrupted operations are shown as failed in Manager.
 
-Native yaşam döngüsü yardımcısı şu an macOS içindir. Uygulama kimliği
-`com.openai.codex` ile bulunur; başka uygulamalara veya bağımsız CLI süreçlerine
-çıkış isteği gönderilmez. Derleme Swift / Xcode command line tools gerektirir;
-son kullanıcı paketinde derlenmiş yardımcı bulunur.
+## Platform and verification limits
 
-Açılış doğrulaması **süreç + giriş dosyası** doğrulamasıdır. Özel sunucu kullanan
-Codex sürümlerinde arayüzde görünen hesabın bağımsız RPC sorgusu yapıldığı veya
-sohbetlerin otomatik devam ettirildiği iddia edilmez.
+The native lifecycle helper currently supports **macOS only**. It locates the app by `com.openai.codex`; unrelated apps and independent CLI sessions are not sent quit requests. Building the helper requires Swift and Xcode Command Line Tools; binary packages include the compiled helper.
 
-35 test; kapanış sırası, giriş dosyasına dokunmadan hata verme, açılış hatasında
-geri dönüş, sonradan değişen girişin reddi, eşzamanlı istekler ve sıfır kotada
-manuel / otomatik akışın aynı denetleyiciyi kullanmasını kapsar. Gerçek native
-kurulum durum sorgusu yapıldı; mevcut sohbeti kapatacağı için bu geliştirme
-sırasında gerçek Codex'e çıkış / hesap değişimi isteği gönderilmedi.
+Startup confirmation verifies **process state and the auth file**. It does not independently query the account displayed in a private Codex desktop server and does not resume conversations.
+
+The test suite covers sequencing, rejected quits, rollback, unexpected auth changes, concurrency and the shared manual/automatic controller. A real native status query located the installed running Codex app. A real close/change/reopen cycle has not yet been run because it would close the active development chat. See the [validation record](validation.md).

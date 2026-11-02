@@ -20,6 +20,7 @@ interface Props {
 }
 
 const INTERVALS = [
+  { value: 60, label: '1 minute' },
   { value: 120, label: '2 minutes' },
   { value: 300, label: '5 minutes' },
   { value: 600, label: '10 minutes' },
@@ -116,7 +117,7 @@ export function SettingsPage({
           <div className="setting-row">
             <div>
               <h3>Enable automatic switching</h3>
-              <p>{settings.auto_switch.enabled ? `On · checks every ${Math.round(settings.auto_switch.interval_seconds / 60)} minutes` : 'Off · switches only when you press a button'}</p>
+              <p>{settings.auto_switch.enabled ? `On · checks every ${Math.round(settings.auto_switch.interval_seconds / 60)} ${settings.auto_switch.interval_seconds === 60 ? 'minute' : 'minutes'}` : 'Off · switches only when you press a button'}</p>
             </div>
             <Toggle
               checked={settings.auto_switch.enabled}
