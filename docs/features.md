@@ -80,3 +80,9 @@ locally. README screenshots use demonstration accounts in a native app window.
 ## Startup feedback
 
 The desktop shell displays a branded opening screen before waiting for the local core. Quota and tray requests start after the dashboard loads, and the bundled runtime version is read from its manifest instead of launching Node a second time. `startup.log` in Electron's user-data directory records elapsed startup stages without account details or sign-in URLs. Windows cold-start timing still requires measurement on Windows.
+
+## Windows tray and closing the app
+
+Left-clicking or double-clicking the notification-area icon shows the main Manager window and restores it if minimized. Right-click the icon for **Open Codex Manager** and **Quit Codex Manager**. Windows uses its native tray menu instead of the macOS popover, avoiding a popup being placed below a bottom taskbar.
+
+The title-bar **X** hides Manager in the tray so quota checks can continue. **Quit Codex Manager** exits the desktop app and stops the core process it started. Launching Manager a second time restores the existing window. On macOS, the menu-bar quota popover remains available.

@@ -42,7 +42,7 @@ import { runAutoSwitch } from './autoSwitch.js';
 import { desktop, type DesktopBridge } from './desktop.js';
 import { restartController, type RestartController } from './restart.js';
 
-const VERSION = '0.1.0-preview.3';
+const VERSION = '0.1.0-preview.4';
 const HOP_BY_HOP = new Set([
   'content-length',
   'content-encoding',

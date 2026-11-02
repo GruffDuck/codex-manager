@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-preview.4 — 2026-11-02
+
+- Fix Windows tray clicks: open and focus the main window, restoring it from minimized or hidden states.
+- Use a native tray context menu with explicit **Open Codex Manager** and **Quit Codex Manager** actions on Windows/Linux. Keep the quota popover on macOS.
+- Stop placing a macOS-style popup below the Windows taskbar, where it can be offscreen.
+- Route second-instance activation through the same restore/focus behavior.
+- Add a regression test covering repeated clicks, minimize/restore, close-to-tray, reopen, second launch and explicit quit with owned-core shutdown.
+
 ## 0.1.0-preview.3 — 2026-11-02
 
 - Restore Windows executable icon and product metadata editing while keeping code signing independent.

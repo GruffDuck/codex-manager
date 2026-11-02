@@ -1,6 +1,6 @@
 {
   "name": "codex-manager",
-  "version": "0.1.0-preview.3",
+  "version": "0.1.0-preview.4",
   "private": true,
   "type": "module",
   "description": "ChatGPT/Codex account manager, quota tracker and local Responses API gateway",

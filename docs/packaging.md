@@ -17,7 +17,7 @@ For an unpacked application directory, use `npm run package:dir`. Outputs are wr
 npm run package:win
 ```
 
-This creates `release/Codex Manager-Setup-0.1.0-preview.3-win-x64.exe` and `release/Codex Manager-0.1.0-preview.3-win-x64.zip`. Extract the entire ZIP; the application EXE depends on adjacent files. `npm run package:win -- arm64` selects Windows ARM64, which has not been built in this validation.
+This creates `release/Codex Manager-Setup-0.1.0-preview.4-win-x64.exe` and `release/Codex Manager-0.1.0-preview.4-win-x64.zip`. Extract the entire ZIP; the application EXE depends on adjacent files. `npm run package:win -- arm64` selects Windows ARM64, which has not been built in this validation.
 
 The Windows package includes account management, quota tracking and gateway code, plus the official Windows Node runtime. Automatic Codex close/reopen uses a macOS-only helper and is unavailable on Windows. The Windows installer and startup have not been run on Windows; cross-building and archive inspection do not validate runtime behavior.
 
@@ -31,7 +31,7 @@ This verification relies on TLS and checksums; it does not separately verify Nod
 
 ## Distribution status
 
-The [published preview](https://github.com/GruffDuck/codex-manager/releases/tag/v0.1.0-preview.3) contains macOS Apple Silicon DMG/ZIP and Windows x64 EXE/ZIP assets with `SHA256SUMS.txt`.
+The [published preview](https://github.com/GruffDuck/codex-manager/releases/tag/v0.1.0-preview.4) contains macOS Apple Silicon DMG/ZIP and Windows x64 EXE/ZIP assets with `SHA256SUMS.txt`.
 
 Packages are **unsigned**. Windows Authenticode, Apple Developer ID and macOS notarization are not configured. There is no automatic updater. Package commands use `--publish never`; publication is a separate step.
 

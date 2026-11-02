@@ -1,12 +1,12 @@
 # Validation record
 
-Date: **2026-11-02**. Product: **Codex Manager 0.1.0-preview.3**.
+Date: **2026-11-02**. Product: **Codex Manager 0.1.0-preview.4**.
 
 ## Completed checks
 
 | Check | Result | Scope |
 | --- | --- | --- |
-| `npm test` | 39 passed | Isolated core, mock gateway and lifecycle tests on macOS. |
+| `npm test` | 40 passed | Isolated core, mock gateway and lifecycle tests on macOS. |
 | `npm run typecheck` | Passed | Core and UI TypeScript. |
 | `npm run package` | Passed | macOS ARM64 DMG / ZIP. |
 | `npm run test:package` | Passed | Bundled Node 24.22.2, production dependencies and a fresh temporary home; health, API and UI responses. |
@@ -25,6 +25,12 @@ Electron is 45.2.1; Zod is 4.6.7. The health response uses `management_api: 3` t
 - One macOS run recorded window visibility at 391 ms, core readiness at 880 ms and UI load at 974 ms from the Electron entry point. This is a single sample, excludes OS launch time before that point, has no comparable baseline and is not a Windows performance measurement.
 - Desktop bridge tests verify opening the system browser without a blank Electron popup, rejecting foreign frames/URLs and isolating the in-app sign-in window. A complete provider sign-in with real credentials was not performed.
 
+## Preview 4 tray checks
+
+A regression test runs the actual desktop main module with mocked Windows Electron APIs. It verifies that a left click opens the main window, minimized windows are restored, repeated/double clicks keep the window visible, the title-bar close hides it, the native menu reopens it, a second instance restores it, and explicit quit allows closing and stops the core owned by the shell. Windows never creates the macOS popover in these tests.
+
+The previous placement code always positioned the popover below the tray icon. This is inappropriate for a bottom Windows taskbar; the Windows path now uses the main window and a native context menu instead. The reported behavior has not been reproduced or visually verified on a real Windows desktop in this macOS development environment.
+
 ## Restart coverage
 
 The primary account button and zero-quota policy share a controller. Tests cover waiting before credential writes, refused quits, launch-failure recovery, unexpected auth changes and concurrent mutations.
@@ -33,7 +39,7 @@ A real close/change/reopen cycle has **not** been performed. The development cha
 
 ## Published artifacts
 
-The [v0.1.0-preview.3 release](https://github.com/GruffDuck/codex-manager/releases/tag/v0.1.0-preview.3) contains macOS ARM64 DMG/ZIP, Windows x64 Setup EXE/ZIP and SHA-256 checksums. Preview 3 rebuilds the macOS and Windows artifacts with embedded Windows branding, immediate startup feedback, deferred background requests, and browser/in-app sign-in options. Previous previews remain available separately.
+The [v0.1.0-preview.4 release](https://github.com/GruffDuck/codex-manager/releases/tag/v0.1.0-preview.4) contains macOS ARM64 DMG/ZIP, Windows x64 Setup EXE/ZIP and SHA-256 checksums. Preview 4 includes the Windows tray restore and explicit quit fix, preserving the branding, startup and sign-in improvements from Preview 3. Previous previews remain available separately.
 
 These are unsigned packages without macOS notarization or auto-update. Windows installation/startup, macOS Intel and Linux execution remain unvalidated. The macOS helper is excluded from Windows packages, which do not advertise restart support.
 

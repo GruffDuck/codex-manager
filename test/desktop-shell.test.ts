@@ -88,3 +88,91 @@ test('desktop IPC opens the default browser, rejects foreign frames and isolates
   assert.equal(child.options.webPreferences.preload, undefined);
   assert.equal(child.loaded, signInUrl(auth).href);
 });
+
+test('Windows tray restores the main window, provides an explicit quit and never opens a macOS popover', async () => {
+  const { runInNewContext } = await import('node:vm');
+  const fs = await import('node:fs');
+  const windows: any[] = [];
+  const trays: any[] = [];
+  const appEvents = new Map<string, (...args: any[]) => any>();
+  let quits = 0;
+  let runtimeTerminations = 0;
+  class Window {
+    webContents = { setWindowOpenHandler() {}, on() {} };
+    events = new Map<string, (...args: any[]) => any>();
+    visible = false;
+    minimized = false;
+    destroyed = false;
+    restores = 0;
+    focuses = 0;
+    constructor() { windows.push(this); }
+    once(name: string, fn: any) { this.events.set(name, fn); }
+    on(name: string, fn: any) { this.events.set(name, fn); }
+    async loadFile() {}
+    async loadURL() {}
+    isDestroyed() { return this.destroyed; }
+    isMinimized() { return this.minimized; }
+    restore() { this.restores++; this.minimized = false; }
+    show() { this.visible = true; }
+    hide() { this.visible = false; }
+    focus() { this.focuses++; }
+  }
+  class Tray {
+    events = new Map<string, () => void>();
+    menu: any[] = [];
+    constructor() { trays.push(this); }
+    setToolTip() {}
+    on(name: string, fn: () => void) { this.events.set(name, fn); }
+    setContextMenu(menu: any[]) { this.menu = menu; }
+  }
+  const image = { addRepresentation() {}, isEmpty: () => false, setTemplateImage() {}, resize() { return this; } };
+  const electron = {
+    app: { setName() {}, setAppUserModelId() {}, requestSingleInstanceLock: () => true,
+      on(name: string, fn: any) { appEvents.set(name, fn); }, whenReady: () => ({ then() {} }),
+      quit() { quits++; appEvents.get('before-quit')?.(); } },
+    BrowserWindow: Window, Tray, Menu: { buildFromTemplate: (items: any[]) => items },
+    nativeImage: { createEmpty: () => image, createFromPath: () => image },
+    ipcMain: { handle() {} },
+  };
+  const require = createRequire(new URL('../electron/main.cjs', import.meta.url));
+  const context: any = { require: (name: string) => name === 'electron' ? electron : require(name),
+    __dirname: new URL('../electron/', import.meta.url).pathname,
+    process: { env: {}, platform: 'win32' }, console, URL, setTimeout,
+    setInterval: () => ({ unref() {} }),
+    runtime: { killed: false, kill: (signal: string) => { assert.equal(signal, 'SIGTERM'); runtimeTerminations++; } },
+  };
+  runInNewContext(fs.readFileSync(new URL('../electron/main.cjs', import.meta.url), 'utf8') + `
+    updateTrayTitle = async () => {};
+    core = runtime;
+    globalThis.openWindow = createWindow;
+    globalThis.makeTray = createTray;
+  `, context);
+  await context.openWindow(true);
+  context.makeTray();
+  const main = windows[0];
+  const tray = trays[0];
+  tray.events.get('click')!();
+  assert.equal(main.visible, true);
+  main.minimized = true;
+  tray.events.get('click')!();
+  assert.equal(main.minimized, false);
+  assert.equal(main.restores, 1);
+  tray.events.get('double-click')!();
+  assert.equal(main.visible, true, 'repeated clicks must not hide the window');
+  assert.equal(windows.length, 1, 'Windows must not create an offscreen popover');
+  let prevented = false;
+  main.events.get('close')!({ preventDefault() { prevented = true; } });
+  assert.equal(prevented, true);
+  assert.equal(main.visible, false);
+  tray.menu.find((item: any) => item.label === 'Open Codex Manager').click();
+  assert.equal(main.visible, true, 'the native menu must reopen a hidden window');
+  main.minimized = true;
+  appEvents.get('second-instance')!();
+  assert.equal(main.minimized, false, 'a second launch must restore the existing window');
+  tray.menu.find((item: any) => item.label === 'Quit Codex Manager').click();
+  assert.equal(quits, 1);
+  assert.equal(runtimeTerminations, 1);
+  prevented = false;
+  main.events.get('close')!({ preventDefault() { prevented = true; } });
+  assert.equal(prevented, false, 'explicit quit must allow the window to close');
+});

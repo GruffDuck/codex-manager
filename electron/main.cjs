@@ -1,6 +1,6 @@
 // Thin desktop shell: it owns the window and the lifetime of the core process,
 // exactly like the standalone-core pattern used by Antigravity Manager.
-const { app, BrowserWindow, dialog, shell, Tray, nativeImage, nativeTheme, screen, ipcMain, Notification } = require('electron');
+const { app, BrowserWindow, dialog, shell, Tray, Menu, nativeImage, nativeTheme, screen, ipcMain, Notification } = require('electron');
 
 app.setName('Codex Manager');
 if (process.platform === 'win32') app.setAppUserModelId('local.codex-manager');
@@ -41,10 +41,7 @@ if (!app.requestSingleInstanceLock()) {
   app.exit(0);
 } else {
   app.on('second-instance', () => {
-    if (!win) return;
-    if (win.isMinimized()) win.restore();
-    win.show();
-    win.focus();
+    showWindow();
   });
 }
 
@@ -281,7 +278,7 @@ function quotaSummary(account) {
 }
 
 function showWindow() {
-  if (!win) void createWindow();
+  if (!win || win.isDestroyed()) void createWindow();
   else {
     if (win.isMinimized()) win.restore();
     win.show();
@@ -460,8 +457,20 @@ function createTray() {
   icon.setTemplateImage(process.platform === 'darwin');
   tray = new Tray(process.platform === 'darwin' ? icon : nativeImage.createFromPath(path.join(__dirname, 'assets', 'icon.png')).resize({ width: 20, height: 20 }));
   tray.setToolTip('Codex Manager');
-  tray.on('click', () => togglePopover());
-  tray.on('right-click', () => togglePopover());
+  if (process.platform === 'darwin') {
+    tray.on('click', () => togglePopover());
+    tray.on('right-click', () => togglePopover());
+  } else {
+    // A macOS popover is positioned below a top menu bar. Windows taskbars can
+    // sit at any edge, so use the native tray menu and restore the main window.
+    tray.on('click', showWindow);
+    tray.on('double-click', showWindow);
+    tray.setContextMenu(Menu.buildFromTemplate([
+      { label: 'Open Codex Manager', click: showWindow },
+      { type: 'separator' },
+      { label: 'Quit Codex Manager', click: () => app.quit() },
+    ]));
+  }
   setInterval(() => void updateTrayTitle(), 30_000).unref();
   void updateTrayTitle();
 }
@@ -486,7 +495,7 @@ app.whenReady().then(async () => {
     });
     // Development aid: open the menu-bar popover without a click, so its
     // layout can be reviewed and screenshotted.
-    if (process.argv.includes('--show-popover')) {
+    if (process.platform === 'darwin' && process.argv.includes('--show-popover')) {
       setTimeout(() => togglePopover(), 5000);
     }
   } catch (error) {
@@ -495,8 +504,7 @@ app.whenReady().then(async () => {
   }
 
   app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) void createWindow();
-    else if (win && !win.isVisible()) win.show();
+    showWindow();
   });
 });
 
