@@ -4,7 +4,7 @@
 <h1 align="center">Codex Manager</h1>
 <p align="center">Your Codex accounts, quotas and local routing in one desktop app.</p>
 <p align="center">
-  <a href="https://github.com/GruffDuck/codex-manager/releases/tag/v0.1.0-preview.1"><img alt="Release: preview" src="https://img.shields.io/badge/release-0.1.0_preview-blue?style=flat-square"></a>
+  <a href="https://github.com/GruffDuck/codex-manager/releases/tag/v0.1.0-preview.2"><img alt="Release: preview" src="https://img.shields.io/badge/release-0.1.0_preview.2-blue?style=flat-square"></a>
   <a href="LICENSE"><img alt="License: CC BY-NC-SA 4.0" src="https://img.shields.io/badge/license-CC_BY--NC--SA_4.0-64748b?style=flat-square"></a>
   <a href="docs/validation.md"><img alt="Validation: 35 tests passed on macOS" src="https://img.shields.io/badge/macOS_tests-35_passed-15803d?style=flat-square"></a>
 </p>
@@ -45,11 +45,11 @@ can distribute Responses API requests across eligible accounts.
 
 | Platform | Installer | Alternative |
 | --- | --- | --- |
-| macOS Apple Silicon | [Download DMG](https://github.com/GruffDuck/codex-manager/releases/download/v0.1.0-preview.1/Codex.Manager-0.1.0-mac-arm64.dmg) | [Download ZIP](https://github.com/GruffDuck/codex-manager/releases/download/v0.1.0-preview.1/Codex.Manager-0.1.0-mac-arm64.zip) |
-| Windows x64 · testing preview | [Download Setup EXE](https://github.com/GruffDuck/codex-manager/releases/download/v0.1.0-preview.1/Codex.Manager-Setup-0.1.0-win-x64.exe) | [Download ZIP](https://github.com/GruffDuck/codex-manager/releases/download/v0.1.0-preview.1/Codex.Manager-0.1.0-win-x64.zip) |
+| macOS Apple Silicon | [Download DMG](https://github.com/GruffDuck/codex-manager/releases/download/v0.1.0-preview.2/Codex.Manager-0.1.0-preview.2-mac-arm64.dmg) | [Download ZIP](https://github.com/GruffDuck/codex-manager/releases/download/v0.1.0-preview.2/Codex.Manager-0.1.0-preview.2-mac-arm64.zip) |
+| Windows x64 · testing preview | [Download Setup EXE](https://github.com/GruffDuck/codex-manager/releases/download/v0.1.0-preview.2/Codex.Manager-Setup-0.1.0-preview.2-win-x64.exe) | [Download ZIP](https://github.com/GruffDuck/codex-manager/releases/download/v0.1.0-preview.2/Codex.Manager-0.1.0-preview.2-win-x64.zip) |
 
-[Release notes](https://github.com/GruffDuck/codex-manager/releases/tag/v0.1.0-preview.1)
-· [SHA-256 checksums](https://github.com/GruffDuck/codex-manager/releases/download/v0.1.0-preview.1/SHA256SUMS.txt)
+[Release notes](https://github.com/GruffDuck/codex-manager/releases/tag/v0.1.0-preview.2)
+· [SHA-256 checksums](https://github.com/GruffDuck/codex-manager/releases/download/v0.1.0-preview.2/SHA256SUMS.txt)
 · [All releases](https://github.com/GruffDuck/codex-manager/releases)
 
 Node.js is included in the desktop packages. You do not need Node or npm to use
@@ -210,6 +210,7 @@ npm run dev
 
 ## Documentation
 
+- [Changelog](CHANGELOG.md)
 - [Feature guide](docs/features.md)
 - [Account switching and automatic restart](docs/desktop-integration.md)
 - [Gateway configuration and API](docs/gateway.md)

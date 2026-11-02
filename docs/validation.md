@@ -1,6 +1,6 @@
 # Validation record
 
-Date: **2026-11-02**. Product: **Codex Manager 0.1.0 preview**.
+Date: **2026-11-02**. Product: **Codex Manager 0.1.0-preview.2**.
 
 ## Completed checks
 
@@ -26,7 +26,7 @@ A real close/change/reopen cycle has **not** been performed. The development cha
 
 ## Published artifacts
 
-The [v0.1.0-preview.1 release](https://github.com/GruffDuck/codex-manager/releases/tag/v0.1.0-preview.1) contains macOS ARM64 DMG/ZIP, Windows x64 Setup EXE/ZIP and SHA-256 checksums. The original binaries were built from the initial release source; later documentation and Settings interval-display improvements on `main` are not a replacement binary build.
+The [v0.1.0-preview.2 release](https://github.com/GruffDuck/codex-manager/releases/tag/v0.1.0-preview.2) contains macOS ARM64 DMG/ZIP, Windows x64 Setup EXE/ZIP and SHA-256 checksums. Preview 2 rebuilds the macOS and Windows artifacts from the updated source, including the one-minute interval selector fix and English third-party notices. The previous Preview 1 remains available separately.
 
 These are unsigned packages without macOS notarization or auto-update. Windows installation/startup, macOS Intel and Linux execution remain unvalidated. The macOS helper is excluded from Windows packages, which do not advertise restart support.
 

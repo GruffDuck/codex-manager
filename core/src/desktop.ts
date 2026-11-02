@@ -112,7 +112,7 @@ export class DesktopRpc {
       this.ws.once('error', () => { clearTimeout(timer); reject(new DesktopError('Could not connect to the running Codex server.')); });
     });
     await this.call('initialize', {
-      clientInfo: { name: 'codex_manager', title: 'Codex Manager', version: '0.1.0' },
+      clientInfo: { name: 'codex_manager', title: 'Codex Manager', version: '0.1.0-preview.2' },
       capabilities: { experimentalApi: true, requestAttestation: false },
     });
     this.ws.send(JSON.stringify({ method: 'initialized', params: {} }));
