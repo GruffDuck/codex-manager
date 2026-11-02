@@ -1,0 +1,481 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="color-scheme" content="light dark" />
+    <title>Codex Manager</title>
+    <style>
+      @font-face {
+        font-family: 'IBM Plex Sans';
+        font-style: normal;
+        font-weight: 100 700;
+        font-display: swap;
+        src: url('assets/fonts/plex-sans.woff2') format('woff2');
+      }
+      @font-face {
+        font-family: 'IBM Plex Mono';
+        font-style: normal;
+        font-weight: 400;
+        font-display: swap;
+        src: url('assets/fonts/plex-mono-400.woff2') format('woff2');
+      }
+      @font-face {
+        font-family: 'IBM Plex Mono';
+        font-style: normal;
+        font-weight: 500;
+        font-display: swap;
+        src: url('assets/fonts/plex-mono-500.woff2') format('woff2');
+      }
+      :root {
+        color-scheme: light;
+        --surface: #ffffff;
+        --surface-2: #f6f9fa;
+        --ink: #131416;
+        --ink-soft: #333638;
+        --muted: #5d5f60;
+        --faint: #6f7173;
+        --line: #e8eaec;
+        --line-strong: #d9dde0;
+        --accent: #1b6c80;
+        --accent-soft: #e9f3f5;
+        --ok: #1b6c80;
+        --warn: #92400e;
+        --bad: #c4242a;
+        --sans: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        --mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          color-scheme: dark;
+          --surface: #111315;
+          --surface-2: #171a1c;
+          --ink: #f1f3f4;
+          --ink-soft: #d4d8da;
+          --muted: #b6b9bb;
+          --faint: #8e9294;
+          --line: #25292c;
+          --line-strong: #343a3e;
+          --accent: #5fb6c8;
+          --accent-soft: #12313a;
+          --ok: #5fb6c8;
+          --warn: #e3ab5b;
+          --bad: #f27b81;
+        }
+      }
+
+      * { box-sizing: border-box; }
+      html, body { margin: 0; background: transparent; }
+      body {
+        padding: 10px;
+        font: 13px/1.45 var(--sans);
+        color: var(--ink);
+        -webkit-font-smoothing: antialiased;
+        user-select: none;
+      }
+
+      .shell {
+        display: flex;
+        flex-direction: column;
+        height: auto;
+        background: var(--surface);
+        border: 1px solid var(--line-strong);
+        border-radius: 16px;
+        box-shadow: 0 22px 48px -18px rgba(9, 14, 16, 0.45), 0 2px 6px rgba(9, 14, 16, 0.06);
+        overflow: hidden;
+      }
+
+      /* ------------------------------------------------------------ header */
+      .head {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        padding: 12px 14px;
+        border-bottom: 1px solid var(--line);
+      }
+      .mark {
+        width: 24px;
+        height: 24px;
+        display: grid;
+        place-items: center;
+        flex: none;
+      }
+      .logo-body { fill: var(--ink); }
+      .logo-prompt { fill: none; stroke: var(--surface); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+      .logo-cell { fill: var(--surface); opacity: 0.42; }
+      .logo-accent { fill: var(--accent); }
+      .brand { font-size: 12.5px; font-weight: 400; letter-spacing: -0.01em; }
+      .brand b { font-weight: 600; }
+      .live {
+        margin-left: auto;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font: 9.5px var(--mono);
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+      .live i { width: 5px; height: 5px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 3px color-mix(in srgb, var(--ok) 15%, transparent); }
+      .live.off i { background: var(--bad); box-shadow: 0 0 0 3px color-mix(in srgb, var(--bad) 15%, transparent); }
+
+      /* -------------------------------------------------------------- hero */
+      .hero { padding: 13px 14px 12px; }
+      .who { display: flex; align-items: center; gap: 10px; margin-bottom: 11px; }
+      .avatar {
+        width: 30px;
+        height: 30px;
+        border-radius: 8px;
+        flex: none;
+        display: grid;
+        place-items: center;
+        background: var(--surface-2);
+        border: 1px solid var(--line);
+        font-family: var(--sans);
+        font-size: 11px;
+        font-weight: 500;
+        color: var(--ink-soft);
+        text-transform: uppercase;
+      }
+      .who-main { min-width: 0; flex: 1; }
+      .email { font-size: 12.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .sub { display: flex; align-items: center; gap: 6px; margin-top: 2px; font-size: 10.5px; color: var(--muted); }
+      .tag {
+        font: 8.5px var(--mono);
+        font-weight: 500;
+        letter-spacing: 0.08em;
+        color: var(--accent);
+        border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+        border-radius: 3px;
+        padding: 0 4px;
+        line-height: 13px;
+      }
+      .plan {
+        font: 9.5px var(--mono);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--muted);
+        border: 1px solid var(--line);
+        border-radius: 3px;
+        padding: 0 4px;
+        line-height: 14px;
+      }
+      .status { display: inline-flex; align-items: center; gap: 4px; font-weight: 550; }
+      .status i { width: 4px; height: 4px; border-radius: 50%; background: currentColor; }
+      .status.ready { color: var(--ok); }
+      .status.limited { color: var(--warn); }
+      .status.expired, .status.error { color: var(--bad); }
+
+      .quota { display: flex; flex-direction: column; gap: 7px; }
+      .qrow { display: grid; grid-template-columns: 34px minmax(0, 1fr) 38px; align-items: center; gap: 9px; }
+      .qlabel { font: 9.5px var(--mono); text-transform: uppercase; letter-spacing: 0.05em; color: var(--faint); }
+      .qval { font: 11px var(--mono); color: var(--ink-soft); text-align: right; font-variant-numeric: tabular-nums; }
+      .seg { display: flex; gap: 2px; height: 7px; }
+      .seg i { flex: 1; border-radius: 1.5px; background: var(--line); }
+      @media (prefers-color-scheme: dark) { .seg i { background: #2a2e31; } }
+      .seg[data-tone='ok'] i.on { background: var(--ok); }
+      .seg[data-tone='mid'] i.on { background: var(--warn); }
+      .seg[data-tone='hot'] i.on { background: var(--bad); }
+      .renew { font-size: 10.5px; color: var(--faint); margin-top: 1px; }
+      .renew.over { color: var(--warn); }
+
+      /* ------------------------------------------------------------ others */
+      .others { display: flex; flex-direction: column; border-top: 1px solid var(--line); }
+      .others-head {
+        display: flex;
+        align-items: baseline;
+        gap: 7px;
+        padding: 10px 14px 5px;
+        font-family: var(--mono);
+        font-size: 9.5px;
+        font-weight: 400;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: var(--faint);
+      }
+      .others-head b { font: 9.5px var(--mono); color: var(--muted); }
+      .others-list { overflow: auto; max-height: 220px; padding: 0 8px 8px; }
+      .acct {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        padding: 8px 6px;
+        border-radius: 8px;
+      }
+      .acct + .acct { border-top: 1px dashed var(--line); border-radius: 0; }
+      .acct .avatar { width: 24px; height: 24px; border-radius: 6px; font-size: 11px; }
+      .acct-main { flex: 1; min-width: 0; }
+      .acct .email { font-size: 11.5px; font-weight: 550; }
+      .mini { display: flex; flex-direction: column; gap: 4px; margin-top: 5px; }
+      .mini-row { display: grid; grid-template-columns: 22px minmax(0, 1fr) 32px; align-items: center; gap: 6px; }
+      .mini-row .seg { flex: 1; height: 4px; }
+      .mini-row .m { font: 9px var(--mono); color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
+      .mini-row .k { font: 8.5px var(--mono); color: var(--faint); }
+      .mini-row .qval { font-size: 9px; }
+
+      .empty { padding: 26px 14px; text-align: center; color: var(--muted); font-size: 12px; }
+      .empty strong { display: block; color: var(--ink); font-size: 13px; margin-bottom: 3px; }
+
+      /* ------------------------------------------------------------ footer */
+      .foot { display: flex; align-items: center; gap: 6px; padding: 10px 12px; border-top: 1px solid var(--line); background: color-mix(in srgb, var(--surface-2) 55%, transparent); }
+      button {
+        font: inherit;
+        color: inherit;
+        cursor: pointer;
+        border: 1px solid var(--line-strong);
+        background: var(--surface);
+        height: 27px;
+        padding: 0 10px;
+        border-radius: 6px;
+        font-size: 11.5px;
+        font-weight: 550;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        transition: background 120ms ease, border-color 120ms ease, transform 80ms ease;
+      }
+      button:hover { background: var(--surface-2); }
+      button:active { transform: translateY(1px); }
+      button:disabled { opacity: 0.5; cursor: default; }
+      button svg { flex: none; }
+      .btn-primary { margin-left: auto; background: var(--ink); border-color: var(--ink); color: var(--surface); }
+      .btn-primary:hover { background: color-mix(in srgb, var(--ink) 86%, var(--surface)); }
+      @media (prefers-color-scheme: dark) {
+        .btn-primary { background: var(--accent); border-color: var(--accent); color: #071114; }
+        .btn-primary:hover { background: color-mix(in srgb, var(--accent) 88%, #ffffff); }
+      }
+      .btn-quiet { border-color: transparent; background: transparent; color: var(--muted); }
+      .btn-quiet:hover { background: var(--surface-2); color: var(--ink); }
+      .spin svg { animation: spin 800ms linear infinite; }
+      @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <header class="head">
+        <span class="mark logo" aria-hidden>
+          <svg width="19" height="19" viewBox="0 0 32 32">
+            <rect class="logo-body" width="32" height="32" rx="8" />
+            <path class="logo-prompt" d="M5.8 11.2 11 16l-5.2 4.8" />
+            <rect class="logo-cell" x="13.4" y="19.2" width="4.2" height="2.7" rx="1.1" />
+            <rect class="logo-cell" x="18.4" y="19.2" width="4.2" height="2.7" rx="1.1" />
+            <rect class="logo-accent" x="23.4" y="19.2" width="2.9" height="2.7" rx="1.1" />
+          </svg>
+        </span>
+        <div class="brand">Codex <b>Manager</b></div>
+        <span class="live" id="live"><i></i> Gateway live</span>
+      </header>
+
+      <section class="hero" id="hero"></section>
+
+      <section class="others">
+        <div class="others-head">Other accounts <b id="others-count"></b></div>
+        <div class="others-list" id="others"></div>
+      </section>
+
+      <footer class="foot">
+        <button id="refresh" title="Refresh quotas">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>
+          Refresh
+        </button>
+        <button id="open" class="btn-primary">
+          Open manager
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7"/><path d="M8 7h9v9"/></svg>
+        </button>
+        <button id="quit" class="btn-quiet" title="Quit Codex Manager">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v9"/><path d="M6.3 6.3a8 8 0 1 0 11.4 0"/></svg>
+        </button>
+      </footer>
+    </div>
+
+    <script>
+      const SEGMENTS = 20;
+      const hero = document.getElementById('hero');
+      const others = document.getElementById('others');
+      const othersCount = document.getElementById('others-count');
+      const live = document.getElementById('live');
+      const refreshBtn = document.getElementById('refresh');
+
+      function esc(value) {
+        return String(value ?? '').replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]);
+      }
+      function pct(window) {
+        const used = window && typeof window.used_percent === 'number' ? window.used_percent : 0;
+        return Math.max(0, Math.min(100, Math.round(100 - used)));
+      }
+      function tone(left) {
+        if (left <= 15) return 'hot';
+        if (left <= 45) return 'mid';
+        return 'ok';
+      }
+      function windowLabel(seconds) {
+        if (!seconds) return 'quota';
+        if (seconds <= 6 * 3600) return '5h';
+        if (seconds <= 25 * 3600) return '24h';
+        return 'weekly';
+      }
+      function shortLabel(seconds) {
+        if (!seconds) return 'quota';
+        if (seconds <= 6 * 3600) return '5h';
+        if (seconds <= 25 * 3600) return '24h';
+        return 'wk';
+      }
+      function bar(left) {
+        const filled = Math.min(SEGMENTS, Math.max(left > 0 ? 1 : 0, Math.round((left / 100) * SEGMENTS)));
+        let cells = '';
+        for (let i = 0; i < SEGMENTS; i += 1) cells += '<i' + (i < filled ? ' class="on"' : '') + '></i>';
+        return '<div class="seg" data-tone="' + tone(left) + '">' + cells + '</div>';
+      }
+      function relative(ms) {
+        const delta = ms - Date.now();
+        const abs = Math.abs(delta);
+        const minutes = Math.round(abs / 60000);
+        if (minutes < 1) return 'now';
+        if (minutes < 60) return minutes + 'm';
+        const hours = Math.floor(minutes / 60);
+        const rest = minutes % 60;
+        if (hours < 36) return rest ? hours + 'h ' + rest + 'm' : hours + 'h';
+        return Math.floor(hours / 24) + 'd';
+      }
+      function statusOf(account) {
+        if (account.status === 'active') return ['ready', 'Ready'];
+        if (account.status === 'rate_limited') {
+          if (account.cooldown_until && account.cooldown_until <= Date.now()) return ['ready', 'Ready · stale'];
+          return ['limited', 'Limited'];
+        }
+        if (account.status === 'expired') return ['expired', 'Sign-in expired'];
+        return ['error', 'Error'];
+      }
+      function quotaRows(account, compact) {
+        const quota = account.quota;
+        if (!quota) return '<div class="renew">No quota snapshot yet — refresh to fetch it.</div>';
+        const rows = [quota.primary, quota.secondary]
+          .filter(Boolean)
+          .map((window) => {
+            const left = pct(window);
+            return (
+              '<div class="qrow"><span class="qlabel">' + windowLabel(window.limit_window_seconds) + '</span>' +
+              bar(left) + '<span class="qval">' + left + '%</span></div>'
+            );
+          })
+          .join('');
+        const reset = quota.primary && quota.primary.reset_at ? quota.primary.reset_at * 1000 : null;
+        const overdue = account.status === 'rate_limited' && account.cooldown_until && account.cooldown_until <= Date.now();
+        const foot = overdue
+          ? '<div class="renew over">reset overdue — refresh to confirm</div>'
+          : reset
+            ? '<div class="renew">resets in ' + relative(reset) + '</div>'
+            : '<div class="renew">captured ' + relative(quota.captured_at) + ' ago</div>';
+        return '<div class="quota">' + rows + (compact ? '' : foot) + '</div>';
+      }
+
+      function render(state) {
+        if (!state) {
+          live.className = 'live off';
+          live.innerHTML = '<i></i> Core offline';
+          hero.innerHTML = '<div class="empty"><strong>Gateway offline</strong>Start Codex Manager again.</div>';
+          others.innerHTML = '';
+          othersCount.textContent = '';
+          return;
+        }
+        live.className = 'live';
+        live.innerHTML = '<i></i> Gateway live';
+
+        const accounts = (state.accounts || []).slice().sort((a, b) => Number(Boolean(b.is_current)) - Number(Boolean(a.is_current)));
+        const current =
+          accounts.find((account) => account.id === state.codex_auth_account_id) ||
+          accounts.find((account) => account.is_current) ||
+          accounts[0];
+
+        if (!current) {
+          hero.innerHTML = '<div class="empty"><strong>No accounts connected</strong>Open the manager to add a ChatGPT login.</div>';
+          others.innerHTML = '';
+          othersCount.textContent = '';
+          return;
+        }
+
+        const [toneClass, statusText] = statusOf(current);
+        hero.innerHTML =
+          '<div class="who">' +
+            '<span class="avatar">' + esc((current.email || '?').slice(0, 1)) + '</span>' +
+            '<div class="who-main">' +
+              '<div class="email" title="' + esc(current.email) + '">' + esc(current.email) + '</div>' +
+              '<div class="sub">' +
+                '<span class="status ' + toneClass + '"><i></i>' + statusText + '</span>' +
+                (current.plan_type ? '<span class="plan">' + esc(current.plan_type) + '</span>' : '') +
+                (current.is_current || current.id === state.codex_auth_account_id ? '<span class="tag">IN USE</span>' : '') +
+              '</div>' +
+            '</div>' +
+          '</div>' +
+          quotaRows(current, false);
+
+        const rest = accounts.filter((account) => account !== current);
+        othersCount.textContent = rest.length ? String(rest.length) : '';
+        others.innerHTML = rest.length
+          ? rest.map((account) => {
+              const quota = account.quota;
+              const rows = [quota && quota.primary, quota && quota.secondary]
+                .filter(Boolean)
+                .map((window) => {
+                  const left = pct(window);
+                  return '<div class="mini-row"><span class="k">' + shortLabel(window.limit_window_seconds) + '</span>' + bar(left) + '<span class="m">' + left + '%</span></div>';
+                })
+                .join('');
+              return (
+                '<div class="acct">' +
+                  '<span class="avatar">' + esc((account.email || '?').slice(0, 1)) + '</span>' +
+                  '<div class="acct-main">' +
+                    '<div class="email" title="' + esc(account.email) + '">' + esc(account.email) + '</div>' +
+                    '<div class="mini">' + (rows || '<span class="m">no quota</span>') + '</div>' +
+                  '</div>' +
+                '</div>'
+              );
+            }).join('')
+          : '<div class="empty">No other accounts yet.</div>';
+      }
+
+      function fit() {
+        requestAnimationFrame(() => {
+          if (window.cm.resize) window.cm.resize(Math.ceil(document.body.scrollHeight));
+        });
+      }
+
+      let busy = false;
+      async function load() {
+        try {
+          const state = await window.cm.state();
+          render(state);
+        } catch {
+          render(null);
+        }
+        fit();
+      }
+      async function refresh() {
+        if (busy) return;
+        busy = true;
+        refreshBtn.disabled = true;
+        refreshBtn.classList.add('spin');
+        try {
+          const state = await window.cm.refresh();
+          render(state);
+        } finally {
+          busy = false;
+          refreshBtn.disabled = false;
+          refreshBtn.classList.remove('spin');
+          fit();
+        }
+      }
+
+      refreshBtn.addEventListener('click', () => void refresh());
+      document.getElementById('open').addEventListener('click', () => window.cm.openApp());
+      document.getElementById('quit').addEventListener('click', () => window.cm.quit());
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') window.close();
+      });
+
+      void load();
+      setInterval(() => {
+        if (!document.hidden) void load();
+      }, 5000);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,52 @@
+{
+  "name": "codex-manager",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "ChatGPT/Codex account manager, quota tracker and local Responses API gateway",
+  "engines": {
+    "node": ">=23.4"
+  },
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "dev:core": "node --disable-warning=ExperimentalWarning --import tsx --watch core/src/main.ts",
+    "dev:ui": "vite --config ui/vite.config.ts",
+    "build": "npm run build:native && npm run build:core && npm run build:ui",
+    "build:core": "tsc -p core/tsconfig.json",
+    "build:ui": "vite build --config ui/vite.config.ts",
+    "start": "node --disable-warning=ExperimentalWarning core/dist/main.js",
+    "desktop": "npm run build && electron electron/main.cjs",
+    "test": "node scripts/test.mjs",
+    "typecheck": "tsc -p core/tsconfig.json --noEmit && tsc -p ui/tsconfig.json --noEmit",
+    "prepare:runtime": "node scripts/prepare-runtime.mjs",
+    "package": "npm run build && npm run prepare:runtime && electron-builder --config electron-builder.cjs --publish never",
+    "package:dir": "npm run build && npm run prepare:runtime && electron-builder --config electron-builder.cjs --dir --publish never",
+    "test:package": "node scripts/smoke-package.mjs",
+    "build:native": "node scripts/build-native.mjs",
+    "package:win": "node scripts/package-windows.mjs"
+  },
+  "dependencies": {
+    "fastify": "^5.2.0",
+    "lucide-react": "^1.65.0",
+    "ws": "^8.22.1",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@types/ws": "^8.18.2",
+    "@vitejs/plugin-react": "^4.3.4",
+    "electron": "^45.2.1",
+    "electron-builder": "^26.18.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "smol-toml": "^1.9.1",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vite": "^6.0.7"
+  },
+  "license": "CC-BY-NC-SA-4.0",
+  "main": "electron/main.cjs",
+  "author": "GruffDuck"
+}

@@ -1,0 +1,26 @@
+node_modules/
+dist/
+core/dist/
+ui/dist/
+*.log
+.DS_Store
+.vite/
+*.tsbuildinfo
+
+.runtime/
+release/
+
+# Local visual inspection output may contain account details.
+.taste-skill/
+
+electron/native/bin/
+
+# Local credentials and account exports
+.env
+.env.*
+auth.json
+secret.key
+*.db
+*.db-shm
+*.db-wal
+.codex-manager/

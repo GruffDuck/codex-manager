@@ -1,0 +1,154 @@
+{
+  "target_code_files": 43,
+  "reference_code_files": 1511,
+  "window_tokens": 25,
+  "matching_pairs": 14,
+  "largest_matches": [
+    {
+      "target": "codex-manager/ui/src/styles.css",
+      "reference": "antigravity-manager/src/styles/global.css",
+      "matching_windows": 33,
+      "longest_token_run": 57,
+      "sample": "} @ media ( prefers - reduced - motion : reduce ) { * , * : : before , * : : after { animation - duration : 0 . 01 ms ! important ; animation - iteration - count : 1 ! important ; transition - duration : 0 . 01 ms ! important ;"
+    },
+    {
+      "target": "codex-manager/test/core.test.ts",
+      "reference": "antigravity-manager/src/tests/unit/openai-responses-websocket-protocol.test.ts",
+      "matching_windows": 9,
+      "longest_token_run": 27,
+      "sample": "} ) ; await new Promise < void > ( ( resolve ) = > server . listen ( 0 , '127.0.0.1' , resolve ) ) ;"
+    },
+    {
+      "target": "codex-manager/test/core.test.ts",
+      "reference": "antigravity-manager/scripts/acceptance/schema/client.ts",
+      "matching_windows": 5,
+      "longest_token_run": 29,
+      "sample": ") ; } ) ; await new Promise < void > ( ( resolve ) = > server . listen ( 0 , '127.0.0.1' , resolve ) ) ;"
+    },
+    {
+      "target": "codex-manager/test/core.test.ts",
+      "reference": "antigravity-manager/scripts/acceptance/schema/sentry.ts",
+      "matching_windows": 5,
+      "longest_token_run": 29,
+      "sample": ") ; } ) ; await new Promise < void > ( ( resolve ) = > server . listen ( 0 , '127.0.0.1' , resolve ) ) ;"
+    },
+    {
+      "target": "codex-manager/ui/src/components/Primitives.tsx",
+      "reference": "antigravity-manager/src/modules/cloud-account/components/CloudAccountProxyEditor.tsx",
+      "matching_windows": 5,
+      "longest_token_run": 29,
+      "sample": "onKeyDown = { ( event ) = > { if ( event . key = = = 'Enter' ) { event . currentTarget . blur ( ) ; }"
+    },
+    {
+      "target": "codex-manager/test/core.test.ts",
+      "reference": "antigravity-manager/src/tests/unit/google-http-evidence.test.ts",
+      "matching_windows": 5,
+      "longest_token_run": 29,
+      "sample": ") ; } ) ; await new Promise < void > ( ( resolve ) = > server . listen ( 0 , '127.0.0.1' , resolve ) ) ;"
+    },
+    {
+      "target": "codex-manager/test/core.test.ts",
+      "reference": "antigravity-manager/src/tests/unit/weekly-warmup-wire.test.ts",
+      "matching_windows": 5,
+      "longest_token_run": 29,
+      "sample": ") ; } ) ; await new Promise < void > ( ( resolve ) = > server . listen ( 0 , '127.0.0.1' , resolve ) ) ;"
+    },
+    {
+      "target": "codex-manager/test/core.test.ts",
+      "reference": "antigravity-manager/src/tests/unit/gemini-tool-config-wire.test.ts",
+      "matching_windows": 3,
+      "longest_token_run": 27,
+      "sample": "} ) ; await new Promise < void > ( ( resolve ) = > server . listen ( 0 , '127.0.0.1' , resolve ) ) ;"
+    },
+    {
+      "target": "codex-manager/core/src/paths.ts",
+      "reference": "antigravity-manager/src/modules/proxy-gateway/ipc/router.ts",
+      "matching_windows": 2,
+      "longest_token_run": 26,
+      "sample": "z . object ( { port : z . number ( ) . int ( ) . min ( 1024 ) . max ( 65535 )"
+    },
+    {
+      "target": "codex-manager/test/gateway.test.ts",
+      "reference": "antigravity-manager/scripts/acceptance/schema/live-retry-relay.mjs",
+      "matching_windows": 1,
+      "longest_token_run": 25,
+      "sample": "response . writeHead ( 503 , { 'content-type' : 'application/json' } ) ; response . end ( JSON . stringify ( { error : {"
+    },
+    {
+      "target": "codex-manager/ui/index.html",
+      "reference": "antigravity-manager/src/tests/performance/support/release-notes.html",
+      "matching_windows": 1,
+      "longest_token_run": 25,
+      "sample": "> < / head > < body > < div id = \"root\" > < / div > < script type = \"module\" src ="
+    },
+    {
+      "target": "codex-manager/ui/index.html",
+      "reference": "antigravity-manager/src/tests/performance/support/renderer-updates.html",
+      "matching_windows": 1,
+      "longest_token_run": 25,
+      "sample": "> < / head > < body > < div id = \"root\" > < / div > < script type = \"module\" src ="
+    },
+    {
+      "target": "codex-manager/electron/main.cjs",
+      "reference": "antigravity-manager/src/tests/unit/desktop-oauth-composition.test.ts",
+      "matching_windows": 1,
+      "longest_token_run": 25,
+      "sample": ", ( response ) = > { response . resume ( ) ; response . on ( 'end' , ( ) = > resolve ("
+    },
+    {
+      "target": "codex-manager/electron/main.cjs",
+      "reference": "antigravity-manager/src/tests/unit/desktop-oauth-login.test.ts",
+      "matching_windows": 1,
+      "longest_token_run": 25,
+      "sample": ", ( response ) = > { response . resume ( ) ; response . on ( 'end' , ( ) = > resolve ("
+    }
+  ],
+  "identical_files": [],
+  "date": "2026-11-02",
+  "scope": "Local current Codex Manager files versus local current Antigravity Manager checkout; not a global originality proof.",
+  "file_hashes": {
+    "core/src/accounts.ts": "246ba53947ffb33a3646d0fe1738c2fb250bacd9a2166777abd746245e94fb1e",
+    "core/src/autoSwitch.ts": "efd82835665a417e73d3e6b29db3e6437df67ab3799adccfd25fdd5f594fc19c",
+    "core/src/codexAuth.ts": "e4207335b25f8dd40f3987d69048557a2fdbfda7d960a97c9e5b9c5d937abff4",
+    "core/src/codexConfig.ts": "01e6d276514e9dc9d39bc7fa9d46a57318b602436e3e6e00d15f3b61d4285041",
+    "core/src/crypto.ts": "52868675c90cf8b90f915f9ff9861c36a9145882322bd15045b9ff145019832d",
+    "core/src/db.ts": "c37bc2f3649a9a785b4b38515ac3acb95a7f4199baa8ef2bb4fe6eadd1b8228d",
+    "core/src/events.ts": "dc591b0dc056ca168cea8cf941f384ac2aa2a43d73a11a76006b3c3d777d77a0",
+    "core/src/gateway.ts": "d2d4262107c05600e4782f45e744bf83d218e19f436159b5b09c3e0a00e7b566",
+    "core/src/lease.ts": "35dd67646028d95705cc8ec901a88da29c80721c10c332f83a9d8a4e4f95f226",
+    "core/src/login.ts": "ef2d19955b05f9794b5a4d604a22861d7faa59b0efc714fc0e2fc5c0518d04f2",
+    "core/src/main.ts": "7fb255c3a319cce98f8ddbd6d7f533b7c135e57b9ff02a3e7e7f13d0002ed5c9",
+    "core/src/oauth.ts": "9a713cb9d863e3610b1019172b6b233bf198988843f4726dd2d50cf963ec65ee",
+    "core/src/paths.ts": "7016289bd16d6a8fd7364d2af0341709d54dc26c0dd6c2e7f61318ac11bcb619",
+    "core/src/quota.ts": "40de1c4d0b7fe5f68b24c50b2fdfd5baaa93b86c23b02f1069c17805a429a96e",
+    "core/src/settings.ts": "82b794cb1587f480361697d49966e2e2ef89596ff8049328d49cd61a79fdf815",
+    "electron/assets/trayTemplate.svg": "7110e1cee4956afb70791c989a604bbfa94cc8591e2d0e3e275d48b665e618b3",
+    "electron/main.cjs": "992825e9985b76ff46434e53764650e52eea676cd340d85de8c92ca17c14f873",
+    "electron/tray-preload.cjs": "6a56e65ef67d45d6e83aff550fa97d39c690055e6c5de4c1364c60ef2663d24a",
+    "electron/tray.html": "ad9a144acb2bc4095f79a59fbaec6a41f6b7ea56fce7602e06e1e154ec65a679",
+    "scripts/dev.mjs": "bcc6b7319b10a05e1e8da729f08ccc16ae7d083a6a3f60bb4e24f20e141f1912",
+    "scripts/mock-upstream.mjs": "93a0113771dbc724da76eebd7eb2b8b2bed4fd40b2ef4fa2e80e35da107f969a",
+    "test/core.test.ts": "8957de4a56317e98bf83bd901e84d142280f86143961977bcda868cc85e0730e",
+    "test/gateway.test.ts": "c4586e160b269cf5c5f57a977ef90e07579978d47349243621135018c3be2f83",
+    "ui/index.html": "017134b11a5cfe4d4642c1b589a5b3aba9ffaf73cd74c692eb8898312a260272",
+    "ui/public/logo.svg": "6e682380cf9d3874d92e6ecf9360f31c78a2c5ab653f2264c4fd8e35add9b950",
+    "ui/src/App.tsx": "bc26109668d0f65770296f393cec386e9592c327c957d800d574abc65aaebfeb",
+    "ui/src/api.ts": "9875dd5c0dfccbb03803fb2c4fee8fd758ed2c7fe27842fce828edc17f50107a",
+    "ui/src/components/AccountRow.tsx": "b411f69db09fde0f8a8ea3e5d86ab969b697fbf564880cc7cd260b1b5d6d95b0",
+    "ui/src/components/AccountsPage.tsx": "4dafdd956294c73317b689b73bde62eec76dfde4f11dc720948624c44945ff23",
+    "ui/src/components/ActivityStrip.tsx": "69cfc626498d4d65cad1f36f149a79a0bdf25efe6ce7146437c91d876363c6c4",
+    "ui/src/components/AddAccountModal.tsx": "02baca744eb7ac1af3d1ebe7b831d5851ab1bea016773c99b85dc6ad327afef6",
+    "ui/src/components/Battery.tsx": "3778cbdcfdd87e9dbec20cc706a8cba3d6639b8049f58f579f192a5a67ba81c8",
+    "ui/src/components/GatewayPage.tsx": "50f39822cdcf36985aeee520ed4a59710e9e9164c4684313f97b4deb1d698cc2",
+    "ui/src/components/Logo.tsx": "78641e931b3b8724bfd5d2770997da8c1acf06b6cdaa52fca0f26ce70ed93c5b",
+    "ui/src/components/Primitives.tsx": "14997a465efdfad8d1ef94f7061febeeeec8b278071fa408f5c994a5fc873fe2",
+    "ui/src/components/SettingsPage.tsx": "a428306f04006b1d5b31161d917eb3e6e525a6e04496b4dc07d001bde926021e",
+    "ui/src/components/TrafficPage.tsx": "c6b2d2d828f21d5130f2ed342ffb512692c1263526d45edd8c5eafc93bcf502b",
+    "ui/src/format.ts": "5981bebf5ebe194a87f8b07c48a483a471c8fd589749e1b1302da34e5376b1cb",
+    "ui/src/main.tsx": "8d29575b185ab528e8900872493155afa638024c5676fe3e915b4ffd16b395dc",
+    "ui/src/styles.css": "24da5d0190d914820671c02ed602cd396251eaaa07a30eeb46cbc5e088c81ff3",
+    "ui/src/theme.ts": "2153dc7c3b414e0f8ae88eaf50b78a51635b9bfe19c85d1be34f63cea6787696",
+    "ui/src/types.ts": "82641f1b060f83c555e16bd89e6585387b0c4fa2a27eaff71e29dd9e75ea795b",
+    "ui/vite.config.ts": "c446b43958a123ab381773b5becfd59d48a9d657f683802d80ec3f2e37874404"
+  }
+}

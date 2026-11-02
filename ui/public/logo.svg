@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Codex Manager">
+  <rect width="512" height="512" rx="128" fill="#131416"/>
+  <path d="M93 179 176 256 93 333" fill="none" stroke="#ffffff" stroke-width="32" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="214" y="307" width="67" height="43" rx="18" fill="#ffffff" opacity="0.42"/>
+  <rect x="294" y="307" width="67" height="43" rx="18" fill="#ffffff" opacity="0.42"/>
+  <rect x="374" y="307" width="46" height="43" rx="18" fill="#1b6c80"/>
+</svg>
