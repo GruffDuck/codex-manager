@@ -13,6 +13,7 @@ export const OAUTH_PORT = Number(process.env.CODEX_MANAGER_OAUTH_PORT ?? 1455);
 export const CALLBACK_PATH = '/auth/callback';
 
 export interface LoginSession {
+  id: string;
   url: string;
   state: string;
   redirect_uri: string;
@@ -23,6 +24,14 @@ export interface LoginCallbacks {
   onCode: (code: string, state: string) => Promise<{ label: string }>;
   onError?: (message: string) => void;
 }
+
+export interface LoginStatus {
+  status: 'pending' | 'completed' | 'failed' | 'cancelled';
+  label?: string;
+  message?: string;
+}
+const results = new Map<string, LoginStatus>();
+export function loginStatus(id: string): LoginStatus | null { return results.get(id) ?? null; }
 
 let active: {
   server: http.Server;
@@ -62,6 +71,9 @@ export function authorizeUrl(params: {
 }
 
 function page(title: string, body: string): string {
+  const escape = (value: string) => value.replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]!);
+  title = escape(title);
+  body = escape(body);
   return `<!doctype html><meta charset="utf-8"><title>${title}</title>
 <style>
   :root { color-scheme: dark }
@@ -94,12 +106,19 @@ export async function startLogin(
   callbacks: LoginCallbacks,
   options: { clientId?: string; port?: number; timeoutMs?: number } = {},
 ): Promise<LoginSession> {
-  close();
+  cancelLogin();
+  const id = crypto.randomUUID();
+  while (results.size >= 32) results.delete(results.keys().next().value!);
   const clientId = options.clientId ?? DEFAULT_CLIENT_ID;
   const port = options.port ?? OAUTH_PORT;
   const redirectUri = `http://localhost:${port}${CALLBACK_PATH}`;
   const { verifier, challenge } = pkcePair();
   const state = base64url(crypto.randomBytes(16));
+  const failed = (message: string) => {
+    if (results.get(id)?.status !== 'pending') return;
+    results.set(id, { status: message === 'cancelled' ? 'cancelled' : 'failed', message });
+    callbacks.onError?.(message);
+  };
 
   const server = http.createServer(async (req, res) => {
     const remote = req.socket.remoteAddress ?? '';
@@ -112,31 +131,37 @@ export async function startLogin(
       res.writeHead(404, { 'content-type': 'text/plain' }).end('not found');
       return;
     }
+    const returnedState = url.searchParams.get('state');
+    if (returnedState !== state || results.get(id)?.status !== 'pending') {
+      res.writeHead(400, { 'content-type': 'text/plain' }).end('Invalid or completed sign-in session');
+      return;
+    }
     const error = url.searchParams.get('error');
     if (error) {
       const description = url.searchParams.get('error_description') ?? error;
-      callbacks.onError?.(description);
+      failed(description);
       res.writeHead(400, { 'content-type': 'text/html' }).end(page('Sign-in failed', description));
       close();
       return;
     }
     const code = url.searchParams.get('code');
-    const returnedState = url.searchParams.get('state');
     if (!code || returnedState !== state) {
       res.writeHead(400, { 'content-type': 'text/html' }).end(page('Sign-in failed', 'Missing code or state mismatch.'));
       return;
     }
     try {
       const result = await callbacks.onCode(code, state);
+      results.set(id, { status: 'completed', label: result.label });
       res
         .writeHead(200, { 'content-type': 'text/html' })
         .end(page('Account added', `${result.label} is ready. You can close this tab and return to Codex Manager.`));
     } catch (err) {
+      failed((err as Error).message);
       res
         .writeHead(500, { 'content-type': 'text/html' })
         .end(page('Sign-in failed', (err as Error).message));
     } finally {
-      setTimeout(close, 1500).unref();
+      setTimeout(() => { if (active?.server === server) close(); }, 1500).unref();
     }
   });
 
@@ -169,16 +194,18 @@ export async function startLogin(
   }
 
   const timer = setTimeout(() => {
-    callbacks.onError?.('Login timed out');
-    close();
+    failed('Login timed out');
+    if (active?.server === server) close();
   }, options.timeoutMs ?? 10 * 60 * 1000);
   timer.unref();
 
-  active = { server, state, callbacks, timer };
+  results.set(id, { status: 'pending' });
+  active = { server, state, callbacks: { ...callbacks, onError: failed }, timer };
   // The verifier is kept in memory only; the state key ties the callback to it.
   verifiers.set(state, { verifier, redirectUri, createdAt: Date.now() });
 
   return {
+    id,
     url: authorizeUrl({ clientId, redirectUri, challenge, state }),
     state,
     redirect_uri: redirectUri,

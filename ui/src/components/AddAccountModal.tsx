@@ -2,11 +2,10 @@ import { useEffect, useRef, useState } from 'react';
 import { Check, ExternalLink, FileJson, FileUp, LogIn, Upload, X } from 'lucide-react';
 import { api, post } from '../api';
 import { openSignIn, type SignInDestination } from '../desktop';
-import type { BulkImportResult, LoginSession, State } from '../types';
+import type { BulkImportResult, LoginSession } from '../types';
 
 interface Props {
   initialView?: 'single' | 'bulk';
-  accountCount: number;
   onClose: () => void;
   onAdded: (message: string) => void;
   notify: (message: string, tone?: 'ok' | 'err') => void;
@@ -14,7 +13,7 @@ interface Props {
 
 type Tab = 'single' | 'bulk';
 
-export function AddAccountModal({ initialView = 'single', accountCount, onClose, onAdded, notify }: Props) {
+export function AddAccountModal({ initialView = 'single', onClose, onAdded, notify }: Props) {
   const [tab, setTab] = useState<Tab>(initialView);
   const [busy, setBusy] = useState<'import' | 'login' | 'json' | 'bulk' | null>(null);
   const [waiting, setWaiting] = useState<LoginSession | null>(null);
@@ -45,27 +44,42 @@ export function AddAccountModal({ initialView = 'single', accountCount, onClose,
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);
 
-  // The OAuth callback lands on the local listener, not in this window. Poll the
-  // state until the new account appears, then close so the pool is visible.
+  // Observe this sign-in attempt: re-authenticating an existing account does
+  // not increase the pool size. Refs keep parent refreshes from resetting polling.
+  const completion = useRef({ onAdded, onClose, notify });
+  completion.current = { onAdded, onClose, notify };
   useEffect(() => {
     if (!waiting) return;
     let cancelled = false;
-    const timer = window.setInterval(() => {
-      void api<State>('/api/state')
-        .then((next) => {
-          if (cancelled || next.accounts.length <= accountCount) return;
-          const added = next.accounts.find((account) => account.email)?.email;
-          onAdded(added ? `Added ${added}.` : 'Account added.');
+    let timer: number | undefined;
+    const poll = async () => {
+      try {
+        const result = await api<{ status: 'pending' | 'completed' | 'failed' | 'cancelled'; label?: string; message?: string }>(`/api/login/${waiting.id}`);
+        if (cancelled) return;
+        if (result.status === 'completed') {
+          completion.current.onAdded(result.label ? `Connected ${result.label}.` : 'Account connected.');
           void window.codexManager?.closeSignIn().catch(() => undefined);
-          onClose();
-        })
-        .catch(() => undefined);
-    }, 2000);
-    return () => {
-      cancelled = true;
-      window.clearInterval(timer);
+          completion.current.onClose();
+          return;
+        }
+        if (result.status !== 'pending') {
+          setWaiting(null);
+          completion.current.notify(result.message ?? 'Sign-in did not complete. Try again.', 'err');
+          return;
+        }
+      } catch {
+        if (cancelled) return;
+      }
+      if (Date.now() >= waiting.expires_at) {
+        setWaiting(null);
+        completion.current.notify('Sign-in expired. Start a new sign-in.', 'err');
+        return;
+      }
+      timer = window.setTimeout(() => void poll(), 1000);
     };
-  }, [accountCount, onAdded, onClose, waiting]);
+    void poll();
+    return () => { cancelled = true; window.clearTimeout(timer); };
+  }, [waiting]);
 
   const importFromCli = async () => {
     setBusy('import');

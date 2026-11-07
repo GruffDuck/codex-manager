@@ -484,7 +484,6 @@ export default function App() {
       {addView ? (
         <AddAccountModal
           initialView={addView}
-          accountCount={state.accounts.length}
           onClose={() => setAddView(null)}
           onAdded={(message) => {
             notify(message);

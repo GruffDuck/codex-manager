@@ -37,7 +37,7 @@ import { safeEqual } from './crypto.js';
 import { quotaFromHeaders } from './quota.js';
 import { nextEligibleAt, pickAccount } from './lease.js';
 import { newApiKey, saveConfig, upstreamBase, codexHome, type AppConfig } from './paths.js';
-import { cancelLogin, exchangeCode, OAUTH_PORT, startLogin } from './login.js';
+import { cancelLogin, loginStatus, exchangeCode, OAUTH_PORT, startLogin } from './login.js';
 import { applyCodexConfig, codexConfigStatus, restoreCodexConfig } from './codexConfig.js';
 import { loadSettings, SettingsPatchSchema, updateSettings } from './settings.js';
 import { listEvents, latestEventId, pushEvent } from './events.js';
@@ -45,7 +45,7 @@ import { runAutoSwitch } from './autoSwitch.js';
 import { desktop, type DesktopBridge } from './desktop.js';
 import { restartController, type RestartController } from './restart.js';
 
-const VERSION = '0.1.0-preview.7';
+const VERSION = '0.1.0-preview.8';
 const HOP_BY_HOP = new Set([
   'content-length',
   'content-encoding',
@@ -884,6 +884,13 @@ export async function buildGateway(deps: GatewayDeps): Promise<FastifyInstance> 
       throw error;
     });
     return { ok: true, ...session };
+  });
+
+  app.get('/api/login/:id', async (request) => {
+    const { id } = request.params as { id: string };
+    const result = loginStatus(id);
+    if (!result) throw httpError(404, 'Sign-in session not found. Start sign-in again.', 'login_not_found');
+    return result;
   });
 
   app.post('/api/login/cancel', async () => {

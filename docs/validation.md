@@ -1,12 +1,12 @@
 # Validation record
 
-Date: **2026-11-07**. Product: **Codex Manager 0.1.0-preview.7**.
+Date: **2026-11-07**. Product: **Codex Manager 0.1.0-preview.8**.
 
 ## Completed checks
 
 | Check | Result | Scope |
 | --- | --- | --- |
-| `npm test` | 47 passed | Isolated core, mock gateway and lifecycle tests on macOS. |
+| `npm test` | 50 passed | Isolated core, mock gateway and lifecycle tests on macOS. |
 | `npm run typecheck` | Passed | Core and UI TypeScript. |
 | `npm run package` | Passed | macOS ARM64 DMG / ZIP. |
 | `npm run test:package` | Passed | Bundled Node 24.22.2, production dependencies and a fresh temporary home; health, API and UI responses. |
@@ -45,9 +45,16 @@ A real **Codex desktop** close/change/reopen cycle has **not** been performed. T
 - The active Codex app was not closed during this live T3 check. Codex desktop close/change/reopen remains covered by simulated tests, not a live cycle.
 - Manager verification is process/auth-file based; it does not claim to read T3's private displayed account. Remote/background servers and Windows are outside the desktop restart support.
 
+## Preview 8 sign-in completion checks
+
+- Each OAuth attempt exposes its own pending/completed/failed/cancelled result. Reconnecting an existing account no longer depends on the number of saved accounts increasing.
+- Regression tests cover reconnect completion, exchange errors, cancellation and rejection of an unrelated callback state.
+- UI polling remains active during dashboard updates and reports expired attempts.
+- The packaged macOS core/UI passed the isolated startup check, and Preview 8 was installed and opened with the user's saved accounts preserved. A new real OAuth login was not performed after this fix.
+
 ## Published artifacts
 
-The [v0.1.0-preview.7 release](https://github.com/GruffDuck/codex-manager/releases/tag/v0.1.0-preview.7) contains macOS ARM64 DMG/ZIP, Windows x64 Setup EXE/ZIP and SHA-256 checksums. Preview 7 includes linked T3 Code switching and its visible account action, plus the earlier Windows tray, branding, startup and sign-in improvements. Previous previews remain available separately.
+The [v0.1.0-preview.8 release](https://github.com/GruffDuck/codex-manager/releases/tag/v0.1.0-preview.8) contains macOS ARM64 DMG/ZIP, Windows x64 Setup EXE/ZIP and SHA-256 checksums. Preview 8 fixes the sign-in dialog waiting after a successful browser callback and includes linked T3 Code switching, its visible account action, and the earlier Windows tray, branding, startup and sign-in improvements. Previous previews remain available separately.
 
 These are unsigned packages without macOS notarization or auto-update. Windows installation/startup, macOS Intel and Linux execution remain unvalidated. The macOS helper is excluded from Windows packages, which do not advertise restart support.
 

@@ -133,6 +133,7 @@ export interface State {
 }
 
 export interface LoginSession {
+  id: string;
   url: string;
   state: string;
   redirect_uri: string;

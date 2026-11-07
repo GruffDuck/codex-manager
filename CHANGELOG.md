@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.0-preview.8 — 2026-11-07
+
+- Track each browser sign-in result directly so reconnecting an existing account closes the waiting dialog correctly.
+- Show failed/expired sign-ins and keep polling stable during background dashboard updates.
+
 ## 0.1.0-preview.7 — 2026-11-07
 
 - Show **Use in T3 Code** directly below the Codex action on each account, instead of hiding it in More actions.
