@@ -18,6 +18,7 @@ import type {
   SettingsPatch,
   State,
 } from './types';
+import { T3CodeModal } from './components/T3CodeModal';
 import { AccountsPage } from './components/AccountsPage';
 import { AddAccountModal } from './components/AddAccountModal';
 import { GatewayPage } from './components/GatewayPage';
@@ -74,6 +75,7 @@ export default function App() {
   const [busy, setBusy] = useState<Set<string>>(new Set());
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [addView, setAddView] = useState<'single' | 'bulk' | null>(null);
+  const [t3Account, setT3Account] = useState<Account | null>(null);
   const [configMessage, setConfigMessage] = useState<string | null>(null);
   const toastId = useRef(1);
   const { theme, setTheme, toggle } = useTheme();
@@ -162,7 +164,8 @@ export default function App() {
   const useInCodex = (account: Account) =>
     run(account.id, async () => {
       await post(`/api/accounts/${account.id}/use-in-codex`);
-      await refresh();
+      const refreshed = await refresh();
+      if (refreshed?.t3_code?.state === 'failed') notify(refreshed.t3_code.message, 'err');
       setConfigMessage(null);
       notify(`Codex reopened with the login saved for ${account.email}.`);
     });
@@ -197,7 +200,7 @@ export default function App() {
 
   const applyConfig = () =>
     run('config', async () => {
-      const result = await post<{ warnings?: string[]; path: string }>('/api/codex/config');
+      const result = await post<{ warnings?: string[]; path: string }>('/api/codex/config', {});
       await refresh();
       setConfigMessage(
         result.warnings?.length
@@ -219,7 +222,7 @@ export default function App() {
     run('config', async () => {
       const result = await post<{ api_key: string }>('/api/key/rotate');
       if (state?.codex_config.applied) {
-        await post('/api/codex/config');
+        await post('/api/codex/config', {});
         setConfigMessage('API key rotated and config.toml rewritten.');
       } else {
         setConfigMessage('API key rotated.');
@@ -421,6 +424,7 @@ export default function App() {
               onUseCodex={(account) => void useInCodex(account)}
               onPrepare={(account) => void prepareLogin(account)}
               onUseCli={(account) => void useInCli(account)}
+              onUseT3Code={setT3Account}
               onRefreshAccount={(account) => void refreshAccount(account)}
               onRemove={(account) => void removeAccount(account)}
             />
@@ -474,6 +478,8 @@ export default function App() {
           </a>
         ))}
       </nav>
+
+      {t3Account ? <T3CodeModal link={state.t3_code} account={t3Account} onClose={() => setT3Account(null)} notify={notify} onPrepared={() => void refresh()} /> : null}
 
       {addView ? (
         <AddAccountModal

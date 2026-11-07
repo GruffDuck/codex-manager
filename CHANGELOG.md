@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.1.0-preview.7 — 2026-11-07
+
+- Show **Use in T3 Code** directly below the Codex action on each account, instead of hiding it in More actions.
+
+## 0.1.0-preview.6 — 2026-11-07
+
+- Use one linked T3 profile so changing accounts in Manager no longer requires editing provider paths.
+- Follow manual and quota-triggered Codex/CLI changes, gracefully restarting an open T3 Code desktop on macOS.
+- Preserve shared T3 sessions/configuration; keep closed apps closed, skip same-account restarts, and recover the old T3 login when reopening fails.
+- Add persistent link status, visible failure reporting and a disconnect action.
+
+## 0.1.0-preview.5 — 2026-11-07
+
+- Add **Use in T3 Code** with an independent per-account Codex CLI profile and guided provider setup, without restarting Codex or changing its active login.
+- Show profile path copying and explicitly distinguish preparation from a verified T3 Code connection.
+
 ## 0.1.0-preview.4 — 2026-11-02
 
 - Fix Windows tray clicks: open and focus the main window, restoring it from minimized or hidden states.

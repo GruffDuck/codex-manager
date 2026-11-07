@@ -21,11 +21,12 @@ interface Props {
   onUseCodex: () => void;
   onPrepare: () => void;
   onUseCli: () => void;
+  onUseT3Code: () => void;
   onRefresh: () => void;
   onRemove: () => void;
 }
 
-export function AccountRow({ account, linked, active, restartAvailable, busy, onUseCodex, onPrepare, onUseCli, onRefresh, onRemove }: Props) {
+export function AccountRow({ account, linked, active, restartAvailable, busy, onUseCodex, onPrepare, onUseCli, onUseT3Code, onRefresh, onRemove }: Props) {
   const [confirming, setConfirming] = useState(false);
   const timer = useRef<number | null>(null);
   const status = statusOf(account);
@@ -116,6 +117,7 @@ export function AccountRow({ account, linked, active, restartAvailable, busy, on
       </div>
 
       <div className="account-actions">
+        <div className="account-client-actions">
         <button
           type="button"
           className={`btn btn-sm${active ? ' btn-current' : ' btn-outline'}`}
@@ -124,8 +126,13 @@ export function AccountRow({ account, linked, active, restartAvailable, busy, on
           title="Close Codex, save this account and reopen Codex"
         >
           {active ? <Check size={12} /> : <ArrowUpRight size={12} />}
-          {linked ? 'Restart Codex' : 'Switch account'}
+          {linked ? 'Restart Codex' : 'Use in Codex'}
         </button>
+        <button type="button" className="btn btn-sm btn-outline" disabled={busy}
+          onClick={onUseT3Code} title="Use this account in the linked T3 Code profile">
+          <ArrowUpRight size={12} /> Use in T3 Code
+        </button>
+        </div>
         <button
           type="button"
           className="icon-btn"

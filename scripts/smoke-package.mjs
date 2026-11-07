@@ -36,6 +36,11 @@ try {
   }
   assert.ok(healthy, 'packaged core must start using only its bundled runtime and dependencies');
   const state = await (await fetch(`http://127.0.0.1:${port}/api/state`)).json();
+  const metadata = JSON.parse(await fs.readFile(path.join(app, 'package.json'), 'utf8'));
+  assert.equal(state.version, metadata.version, 'packaged core must match the app version');
+  const t3 = await fetch(`http://127.0.0.1:${port}/api/accounts/no-such-account/use-in-t3-code`, { method: 'POST' });
+  assert.equal(t3.status, 404);
+  assert.equal((await t3.json()).error.message, 'Account not found', 'the packaged T3 integration route must be present');
   assert.equal(state.accounts.length, 0);
   assert.equal(state.codex_desktop.state, 'unavailable');
   assert.equal(state.codex_home, path.join(home, '.codex'));
@@ -44,7 +49,7 @@ try {
   const manifest = JSON.parse(await fs.readFile(path.join(bundle, 'runtime/manifest.json'), 'utf8'));
   assert.equal(manifest.arch, process.arch);
   console.log(JSON.stringify({ ok: true, node: manifest.version, arch: manifest.arch, accounts: 0,
-    ui: 'served', desktop: state.codex_desktop.state, isolated_profile: true }, null, 2));
+    ui: 'served', version: metadata.version, t3_code: 'route verified', desktop: state.codex_desktop.state, isolated_profile: true }, null, 2));
 } catch (error) {
   // Never print logs wholesale, even though this test uses an empty profile.
   throw new Error(`${error.message}; startup log bytes: ${Buffer.byteLength(log)}`);

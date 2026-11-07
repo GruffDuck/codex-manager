@@ -10,9 +10,9 @@ is shown on the account instead of being silently treated as available quota.
 The quota bars show **remaining** capacity. Reset times and plan labels come
 from the service. Different plans may expose different windows.
 
-## Switch account / Restart Codex
+## Use in Codex / Restart Codex
 
-On macOS, **Switch account** closes Codex, saves the chosen login and opens
+On macOS, **Use in Codex** closes Codex, saves the chosen login and opens
 Codex again. The selected account's **Restart Codex** button repeats that
 sequence for the same login. Both can interrupt an active reply.
 
@@ -29,7 +29,22 @@ The account menu contains explicit file-only actions:
 - **Use in CLI** writes the credentials without changing gateway configuration.
   It does not force an already running desktop session to reload them.
 
-These actions do not claim that the open Codex app has changed account.
+These actions do not claim that the open Codex app has changed account. If T3 linked switching is enabled, the linked T3 desktop follows the selection using its own restart sequence.
+
+## T3 Code
+
+**Use in T3 Code** is directly below the Codex button on every account. Connect
+the fixed linked profile once, then keep using that same provider instance in
+T3. Subsequent Manager Codex/CLI account changes, including quota-triggered
+changes, update the linked login. On macOS an open T3 desktop is asked to quit
+and is reopened after its processes exit and the login is saved. A closed app
+stays closed; active replies are not resumed automatically.
+
+The link can be disconnected without deleting T3's files. Refused quits leave
+the old T3 login unchanged; failed launches attempt recovery. The status is
+visible in Manager and does not silently turn a T3 failure into a successful
+T3 switch. Linked desktop switching requires macOS; Windows users should use
+T3's own account management. See the [setup and migration guide](../README.md#t3-code).
 
 ## Automatic switching
 

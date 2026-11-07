@@ -1,19 +1,16 @@
+import { MacLifecycleHost, RestartError, type LifecycleHost } from './lifecycleHost.js';
+import { syncLinkedT3Code } from './t3Sync.js';
 import fs from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { execFile } from 'node:child_process';
-import { promisify } from 'node:util';
 import { randomUUID } from 'node:crypto';
-import { z } from 'zod';
 import { codexAuthPath, codexConfigPath, codexHome, type AppConfig } from './paths.js';
 import { getAccount, getSetting, setSetting, touchAccount } from './db.js';
-import { ensureFresh, CURRENT_ACCOUNT_KEY } from './accounts.js';
+import { ensureFresh, tokensOf, CURRENT_ACCOUNT_KEY } from './accounts.js';
 import { readAuthFile, switchClientTo } from './codexAuth.js';
 import { codexConfigStatus, restoreCodexConfig } from './codexConfig.js';
 import { seal } from './crypto.js';
 import { withClientMutation } from './clientMutation.js';
 
-const run = promisify(execFile);
 const delay = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 const OP_KEY = 'codex_restart_operation';
 const BACKUP_KEY = 'codex_restart_rollback';
@@ -23,60 +20,7 @@ export interface RestartOperation {
   started_at: number; updated_at: number; verification: 'process_and_auth_file' | null;
 }
 export interface RestartStatus { supported: boolean; installed: boolean; running: boolean; reason: string; operation: RestartOperation | null }
-export interface LifecycleHost {
-  inspect(): Promise<{ installed: boolean; running: boolean }>;
-  quit(): Promise<void>;
-  launch(): Promise<void>;
-}
-export class RestartError extends Error {
-  constructor(message: string, public code = 'restart_failed', public status = 409) { super(message); }
-}
-
-export class MacLifecycleHost implements LifecycleHost {
-  private helper = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../electron/native/bin/codex-lifecycle');
-  private async command(command: 'status' | 'quit' | 'launch') {
-    if (process.platform !== 'darwin' || !fs.existsSync(this.helper)) {
-      throw new RestartError('Automatic Codex restart requires the macOS desktop build.', 'restart_unsupported');
-    }
-    try {
-      const { stdout } = await run(this.helper, [command, ...(command === 'launch' ? [codexHome()] : [])], { timeout: command === 'quit' ? 30_000 : 25_000, maxBuffer: 64 * 1024 });
-      return z.object({ ok: z.literal(true), installed: z.boolean().optional(), running: z.boolean(), pids: z.array(z.number()).optional() }).parse(JSON.parse(stdout));
-    } catch {
-      throw new RestartError(command === 'quit' ? 'Codex did not finish quitting. The login has not been replaced.'
-        : command === 'launch' ? 'Codex could not be reopened.' : 'Codex could not be located on this Mac.', `restart_${command}_failed`);
-    }
-  }
-  async inspect() { const result = await this.command('status'); return { installed: result.installed === true, running: result.running }; }
-  async quit() {
-    // Record Codex descendants so credentials are not replaced while a child
-    // app-server is still exiting and could write the old login back.
-    const state = await this.command('status');
-    const snapshot = await run('/bin/ps', ['-axo', 'pid=,ppid=,comm='], { timeout: 3000, maxBuffer: 4 * 1024 * 1024 });
-    const rows = snapshot.stdout.split('\n').flatMap((line) => {
-      const m = /^\s*(\d+)\s+(\d+)\s+(.+)$/.exec(line);
-      return m ? [{ pid: Number(m[1]), parent: Number(m[2]), command: m[3]! }] : [];
-    });
-    const descendants = new Set(state.pids ?? []);
-    let changed = true;
-    while (changed) {
-      changed = false;
-      for (const row of rows) if (descendants.has(row.parent) && !descendants.has(row.pid)) { descendants.add(row.pid); changed = true; }
-    }
-    const tracked = rows.filter((row) => descendants.has(row.pid));
-    await this.command('quit');
-    for (let attempt = 0; attempt < 50; attempt++) {
-      const current = await run('/bin/ps', ['-axo', 'pid=,comm='], { timeout: 3000, maxBuffer: 4 * 1024 * 1024 });
-      const alive = tracked.some((row) => current.stdout.split('\n').some((line) => {
-        const m = /^\s*(\d+)\s+(.+)$/.exec(line);
-        return m && Number(m[1]) === row.pid && m[2] === row.command;
-      }));
-      if (!alive) return;
-      await delay(200);
-    }
-    throw new RestartError('A Codex child process is still exiting. No login was replaced.', 'restart_children_running');
-  }
-  async launch() { await this.command('launch'); }
-}
+export { MacLifecycleHost, RestartError, type LifecycleHost } from './lifecycleHost.js';
 
 interface Snapshot { auth: string | null; config: string | null; current: string | null }
 const snapshot = (): Snapshot => ({
@@ -167,6 +111,7 @@ export class RestartController {
           }
           touchAccount(id);
           setSetting(CURRENT_ACCOUNT_KEY, id);
+          await syncLinkedT3Code(tokensOf(getAccount(id) ?? row), id);
           operation.verification = 'process_and_auth_file';
           phase('completed', 'Codex reopened and the selected login is saved.');
           setSetting(BACKUP_KEY, null);

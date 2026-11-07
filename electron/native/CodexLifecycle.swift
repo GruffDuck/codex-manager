@@ -1,7 +1,9 @@
 import AppKit
 import Foundation
 
-let bundleID = "com.openai.codex"
+let target = ProcessInfo.processInfo.environment["CODEX_MANAGER_LIFECYCLE_TARGET"] ?? "codex"
+guard target == "codex" || target == "t3-code" else { exit(2) }
+let bundleID = target == "t3-code" ? "com.t3tools.t3code" : "com.openai.codex"
 func output(_ value: [String: Any], code: Int32 = 0) -> Never {
     let data = try! JSONSerialization.data(withJSONObject: value, options: [.sortedKeys])
     print(String(data: data, encoding: .utf8)!)
@@ -36,7 +38,7 @@ case "quit":
     }
     output(["ok": true, "running": false])
 case "launch":
-    guard CommandLine.arguments.count == 3 else {
+    guard target == "t3-code" || CommandLine.arguments.count == 3 else {
         output(["ok": false, "error": "A Codex profile directory is required."], code: 2)
     }
     guard running().isEmpty else {
@@ -44,7 +46,7 @@ case "launch":
     }
     let config = NSWorkspace.OpenConfiguration()
     config.activates = true
-    config.environment = ["CODEX_HOME": CommandLine.arguments[2]]
+    if target == "codex" { config.environment = ["CODEX_HOME": CommandLine.arguments[2]] }
     var finished = false
     var success = false
     NSWorkspace.shared.openApplication(at: applicationURL, configuration: config) { app, error in

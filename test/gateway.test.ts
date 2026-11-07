@@ -474,3 +474,71 @@ test('account button and zero-quota auto-switch use the same close-write-reopen 
     await gateway.close();
   }
 });
+
+test('gateway configuration can be applied without a request body', async () => {
+  const response = await app.inject({ method: 'POST', url: '/api/codex/config' });
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.json().ok, true);
+  assert.equal(response.json().path, `${process.env.CODEX_HOME}/config.toml`);
+});
+
+test('T3 linked profile keeps one stable path and preserves the active Codex login/config', async (t) => {
+  const { T3SyncController, t3SyncController } = await import('../core/src/t3Sync.js');
+  const controller = new T3SyncController({ inspect: async () => ({ installed: true, running: false }), quit: async () => {}, launch: async () => {} }, async () => {});
+  t.mock.method(t3SyncController, 'select', controller.select.bind(controller));
+  const { getAccount } = await import('../core/src/db.js');
+  const { tokensOf } = await import('../core/src/accounts.js');
+  const authFile = path.join(process.env.CODEX_HOME!, 'auth.json');
+  const configFile = path.join(process.env.CODEX_HOME!, 'config.toml');
+  const originalAuth = fs.existsSync(authFile) ? fs.readFileSync(authFile, 'utf8') : null;
+  const originalConfig = fs.existsSync(configFile) ? fs.readFileSync(configFile, 'utf8') : null;
+  const { buildGateway } = await import('../core/src/gateway.js');
+  let restarts = 0;
+  const gateway = await buildGateway({
+    config: { port: 8055, api_key: 'sk-t3-test', upstream_base: base, max_account_attempts: 1, request_timeout_ms: 20_000 },
+    restart: {
+      status: async () => ({ supported: true, installed: true, running: true, reason: '', operation: null }),
+      restart: async () => { restarts++; throw new Error('T3 preparation must not restart Codex'); },
+    },
+  });
+  try {
+    const response = await gateway.inject({ method: 'POST', url: `/api/accounts/${ACCOUNT_A}/use-in-t3-code` });
+    assert.equal(response.statusCode, 200);
+    const result = response.json();
+    assert.equal(result.status, 'prepared');
+    assert.equal(result.connection_verified, false);
+    assert.equal(result.shadow_home, '');
+    assert.ok(path.isAbsolute(result.codex_home));
+    assert.notEqual(result.codex_home, process.env.CODEX_HOME);
+    const file = path.join(result.codex_home, 'auth.json');
+    assert.equal(JSON.parse(fs.readFileSync(file, 'utf8')).tokens.account_id, ACCOUNT_A);
+    assert.equal(JSON.parse(fs.readFileSync(file, 'utf8')).tokens.access_token, tokensOf(getAccount(ACCOUNT_A)!).access_token);
+    assert.match(fs.readFileSync(path.join(result.codex_home, 'config.toml'), 'utf8'), /cli_auth_credentials_store = "file"/);
+    if (process.platform !== 'win32') {
+      assert.equal(fs.statSync(file).mode & 0o777, 0o600);
+      assert.equal(fs.statSync(result.codex_home).mode & 0o777, 0o700);
+    }
+    assert.ok(!response.body.includes('access_token'));
+    assert.ok(!response.body.includes('refresh_token'));
+    fs.appendFileSync(path.join(result.codex_home, 'config.toml'), 'model = "keep-model"\n');
+    const repeated = await gateway.inject({ method: 'POST', url: `/api/accounts/${ACCOUNT_A}/use-in-t3-code` });
+    assert.equal(repeated.statusCode, 200);
+    assert.equal(repeated.json().codex_home, result.codex_home);
+    assert.match(fs.readFileSync(path.join(result.codex_home, 'config.toml'), 'utf8'), /keep-model/);
+    const other = await gateway.inject({ method: 'POST', url: `/api/accounts/${ACCOUNT_B}/use-in-t3-code` });
+    assert.equal(other.statusCode, 200);
+    assert.equal(other.json().codex_home, result.codex_home);
+    assert.equal(JSON.parse(fs.readFileSync(path.join(other.json().codex_home, 'auth.json'), 'utf8')).tokens.account_id, ACCOUNT_B);
+    assert.equal(fs.existsSync(authFile) ? fs.readFileSync(authFile, 'utf8') : null, originalAuth);
+    assert.equal(fs.existsSync(configFile) ? fs.readFileSync(configFile, 'utf8') : null, originalConfig);
+    assert.equal(restarts, 0);
+    const missing = await gateway.inject({ method: 'POST', url: '/api/accounts/not-an-account/use-in-t3-code' });
+    assert.equal(missing.statusCode, 404);
+    const crossOrigin = await gateway.inject({ method: 'POST', url: `/api/accounts/${ACCOUNT_A}/use-in-t3-code`, headers: { origin: 'https://example.com' } });
+    assert.equal(crossOrigin.statusCode, 403);
+    const disconnected = await gateway.inject({ method: 'POST', url: '/api/t3-code/disconnect' });
+    assert.equal(disconnected.json().t3_code.enabled, false);
+  } finally {
+    await gateway.close();
+  }
+});

@@ -4,9 +4,9 @@
 <h1 align="center">Codex Manager</h1>
 <p align="center">Your Codex accounts, quotas and local routing in one desktop app.</p>
 <p align="center">
-  <a href="https://github.com/GruffDuck/codex-manager/releases/tag/v0.1.0-preview.4"><img alt="Release: preview" src="https://img.shields.io/badge/release-0.1.0_preview.4-blue?style=flat-square"></a>
+  <a href="https://github.com/GruffDuck/codex-manager/releases/tag/v0.1.0-preview.7"><img alt="Release: preview" src="https://img.shields.io/badge/release-0.1.0_preview.7-blue?style=flat-square"></a>
   <a href="LICENSE"><img alt="License: CC BY-NC-SA 4.0" src="https://img.shields.io/badge/license-CC_BY--NC--SA_4.0-64748b?style=flat-square"></a>
-  <a href="docs/validation.md"><img alt="Validation: 40 tests passed on macOS" src="https://img.shields.io/badge/macOS_tests-40_passed-15803d?style=flat-square"></a>
+  <a href="docs/validation.md"><img alt="Validation: 47 tests passed on macOS" src="https://img.shields.io/badge/macOS_tests-47_passed-15803d?style=flat-square"></a>
 </p>
 <p align="center">
   <a href="#download">Download</a> · <a href="#getting-started">Getting started</a> · <a href="#screenshots">Screenshots</a> · <a href="#documentation">Documentation</a>
@@ -34,6 +34,7 @@ can distribute Responses API requests across eligible accounts.
 - [Platform support](#platform-support)
 - [Getting started](#getting-started)
 - [Account switching](#account-switching)
+- [T3 Code](#t3-code)
 - [Optional gateway](#optional-gateway)
 - [Screenshots](#screenshots)
 - [Privacy and local storage](#privacy-and-local-storage)
@@ -45,11 +46,11 @@ can distribute Responses API requests across eligible accounts.
 
 | Platform | Installer | Alternative |
 | --- | --- | --- |
-| macOS Apple Silicon | [Download DMG](https://github.com/GruffDuck/codex-manager/releases/download/v0.1.0-preview.4/Codex.Manager-0.1.0-preview.4-mac-arm64.dmg) | [Download ZIP](https://github.com/GruffDuck/codex-manager/releases/download/v0.1.0-preview.4/Codex.Manager-0.1.0-preview.4-mac-arm64.zip) |
-| Windows x64 · testing preview | [Download Setup EXE](https://github.com/GruffDuck/codex-manager/releases/download/v0.1.0-preview.4/Codex.Manager-Setup-0.1.0-preview.4-win-x64.exe) | [Download ZIP](https://github.com/GruffDuck/codex-manager/releases/download/v0.1.0-preview.4/Codex.Manager-0.1.0-preview.4-win-x64.zip) |
+| macOS Apple Silicon | [Download DMG](https://github.com/GruffDuck/codex-manager/releases/download/v0.1.0-preview.7/Codex.Manager-0.1.0-preview.7-mac-arm64.dmg) | [Download ZIP](https://github.com/GruffDuck/codex-manager/releases/download/v0.1.0-preview.7/Codex.Manager-0.1.0-preview.7-mac-arm64.zip) |
+| Windows x64 · testing preview | [Download Setup EXE](https://github.com/GruffDuck/codex-manager/releases/download/v0.1.0-preview.7/Codex.Manager-Setup-0.1.0-preview.7-win-x64.exe) | [Download ZIP](https://github.com/GruffDuck/codex-manager/releases/download/v0.1.0-preview.7/Codex.Manager-0.1.0-preview.7-win-x64.zip) |
 
-[Release notes](https://github.com/GruffDuck/codex-manager/releases/tag/v0.1.0-preview.4)
-· [SHA-256 checksums](https://github.com/GruffDuck/codex-manager/releases/download/v0.1.0-preview.4/SHA256SUMS.txt)
+[Release notes](https://github.com/GruffDuck/codex-manager/releases/tag/v0.1.0-preview.7)
+· [SHA-256 checksums](https://github.com/GruffDuck/codex-manager/releases/download/v0.1.0-preview.7/SHA256SUMS.txt)
 · [All releases](https://github.com/GruffDuck/codex-manager/releases)
 
 Node.js is included in the desktop packages. You do not need Node or npm to use
@@ -64,6 +65,7 @@ only the EXE will omit required files.
 | Quota visibility | Remaining quota, reset times and plan information reported by the upstream service. |
 | Account switching | On macOS, a controlled close, login update and reopen sequence. |
 | Automatic switching | On macOS, the same restart sequence when the selected login reaches your quota threshold. |
+| T3 Code | One fixed profile follows account selections, with graceful T3 desktop restart on macOS. |
 | Local gateway | Optional quota-weighted routing, token refresh and retries for Responses API requests. |
 | Desktop utilities | Menu-bar access, configurable notifications, light/dark themes and request history. |
 | Import and export | Account metadata, explicitly requested credential exports and diagnostics. |
@@ -79,6 +81,7 @@ Manager does not treat them as interchangeable.
 | Downloadable package | DMG / ZIP | Setup EXE / ZIP | Build targets only |
 | Packaged startup validation | Passed | Not yet run | Not yet run |
 | Account, quota and gateway UI | Included | Included; awaiting platform testing | Source build |
+| Linked T3 Code switching | Implemented; live round-trip checked | Not supported | Not supported |
 | Automatic Codex close/reopen | Implemented; real switch cycle still pending | Not implemented | Not implemented |
 | Signed release / auto-update | Not available | Not available | Not available |
 
@@ -89,7 +92,7 @@ See [validation](docs/validation.md) for the exact checks performed.
 1. Install the package for your platform and open Codex Manager.
 2. Select **Add account**. Sign in with ChatGPT or import an existing Codex login.
 3. Refresh quotas to confirm each account's reported availability.
-4. On macOS, select **Switch account** to close Codex, save that login and reopen it.
+4. On macOS, select **Use in Codex** to close Codex, save that login and reopen it.
 5. To switch at quota exhaustion, open **Settings**, choose **Restart Codex**, set
    the threshold to **0%**, choose the check interval and enable automatic switching.
 
@@ -113,6 +116,44 @@ independently read the account displayed inside a private Codex desktop session.
 It also does not automatically resume an interrupted conversation.
 
 [Switching behavior and recovery](docs/desktop-integration.md)
+
+## T3 Code
+
+Linked switching currently requires the macOS desktop build. On Windows, use
+T3 Code’s own account management; automatic T3 restart is not supported.
+
+Select **Use in T3 Code**, directly below the Codex button on an account,
+then **Link and use this account**. Manager
+prepares one fixed profile at `~/.codex-manager/integrations/t3-code/linked`.
+Once, set your existing T3 Codex CLI provider's **CODEX_HOME path** to that
+path, leave **Shadow home path** empty and refresh provider status. Keep
+using that same provider instance. Preview 5 users must replace the old
+account-specific path once. If the CLI reports `ENOENT`, set **Binary path**
+to a working Codex CLI executable.
+
+After connecting, manual Codex/CLI selections and quota-triggered switches
+update this same T3 profile automatically. On macOS, if T3 Code is running,
+Manager asks it to quit, waits for its tracked child processes, saves the new
+login and reopens it. Active replies may be interrupted and are not automatically
+resumed. A closed T3 stays closed. No forced quit is used. The same-account
+selection does not restart T3 or overwrite credentials it may have refreshed.
+
+The linked accounts share T3 sessions and configuration. Credentials use file
+storage with restricted permissions; the main Codex configuration is separate.
+If T3 refuses to quit, its login stays unchanged. Reopen/verification failures
+attempt to restore the previous T3 login and reopen it. A T3 failure is shown
+in Manager and does not undo an already completed Codex change. Verification
+checks the app process and saved auth file, not the account displayed in T3's
+private UI. Select the linked instance when starting or continuing a T3 thread.
+
+Use **Disconnect linked switching** in the T3 dialog to stop following Manager.
+The provider and its files are retained. Removing an account does not delete an
+exported profile; disconnect its T3 provider and delete unused profile directories
+(including their credential backups) when no longer needed. Usage in both
+clients counts against the same account quota. Remote servers, WSL and background
+T3 servers are not controlled by the macOS desktop restart integration.
+
+See [T3 Code's Codex provider documentation](https://github.com/pingdotgg/t3code/blob/main/docs/user/providers-codex.md).
 
 ## Optional gateway
 

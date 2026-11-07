@@ -100,6 +100,11 @@ export interface State {
     request_timeout_ms: number;
     oauth_port: number;
   };
+  t3_code?: {
+    enabled: boolean; codex_home: string; account_id: string | null;
+    state: 'disabled' | 'ready' | 'switching' | 'failed'; message: string;
+    verification: 'process_and_auth_file' | 'auth_file' | null;
+  };
   codex_home: string;
   accounts: Account[];
   counts: { total: number; active: number };

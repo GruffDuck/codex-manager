@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import { syncLinkedT3Code } from './t3Sync.js';
 import { withClientMutation } from './clientMutation.js';
 import { seal, open } from './crypto.js';
 import {
@@ -302,7 +303,7 @@ export async function refreshQuota(id: string, config: AppConfig): Promise<Accou
 }
 
 /** Copies one account into the Codex CLI's auth.json so the terminal client uses it. */
-export async function switchTo(id: string, config: AppConfig): Promise<{ path: string; account: AccountPublic }> {
+export async function switchTo(id: string, config: AppConfig): Promise<{ path: string; account: AccountPublic; t3_code: import('./t3Sync.js').T3LinkStatus }> {
   return withClientMutation(async () => {
     const row = getAccount(id);
     if (!row) throw new AccountError('Account not found', 404, 'not_found');
@@ -327,7 +328,8 @@ export async function switchTo(id: string, config: AppConfig): Promise<{ path: s
       latency_ms: null,
       note: 'Switched Codex CLI auth.json',
     });
-    return { path, account: toPublic(updated, config) };
+    const t3_code = await syncLinkedT3Code(tokensOf(getAccount(id) ?? updated), id);
+    return { path, account: toPublic(updated, config), t3_code };
   });
 }
 

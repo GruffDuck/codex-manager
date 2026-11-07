@@ -12,11 +12,12 @@ interface Props {
   onUseCodex: (account: Account) => void;
   onPrepare: (account: Account) => void;
   onUseCli: (account: Account) => void;
+  onUseT3Code: (account: Account) => void;
   onRefreshAccount: (account: Account) => void;
   onRemove: (account: Account) => void;
 }
 
-export function AccountsPage({ state, busy, onAdd, onRefreshAll, onUseCodex, onPrepare, onUseCli, onRefreshAccount, onRemove }: Props) {
+export function AccountsPage({ state, busy, onAdd, onRefreshAll, onUseCodex, onPrepare, onUseCli, onUseT3Code, onRefreshAccount, onRemove }: Props) {
   const prepared = state.accounts.find((account) => account.id === state.codex_auth_account_id) ?? null;
   const restart = state.codex_restart;
   const operation = restart?.operation;
@@ -55,6 +56,9 @@ export function AccountsPage({ state, busy, onAdd, onRefreshAll, onUseCodex, onP
       {!restart?.supported ? <p className="desktop-note" role="status">{restart?.reason ?? 'Checking automatic restart support…'}</p> : null}
       {operation?.phase === 'failed' ? <p className="desktop-note" role="alert"><strong>Account change failed.</strong> {operation.message}</p> : null}
 
+      {state.t3_code?.enabled ? <p className="desktop-note" role="status">
+        <strong>T3 Code linked.</strong> {['failed', 'switching'].includes(state.t3_code.state) ? state.t3_code.message : 'Follows Manager account changes. An open T3 Code app restarts to load the new login.'}
+      </p> : null}
       <section className="panel pool" aria-labelledby="pool-title">
         <header className="panel-head">
           <div className="panel-title"><h2 id="pool-title">Saved accounts</h2><span className="panel-note">{state.counts.active} available</span></div>
@@ -72,7 +76,7 @@ export function AccountsPage({ state, busy, onAdd, onRefreshAll, onUseCodex, onP
             <AccountRow key={account.id} account={account} active={false}
               restartAvailable={restart?.supported === true} linked={account.id === prepared?.id && !gateway}
               busy={changing || busy.has(account.id) || busy.has('global')}
-              onUseCodex={() => onUseCodex(account)} onPrepare={() => onPrepare(account)} onUseCli={() => onUseCli(account)}
+              onUseCodex={() => onUseCodex(account)} onPrepare={() => onPrepare(account)} onUseCli={() => onUseCli(account)} onUseT3Code={() => onUseT3Code(account)}
               onRefresh={() => onRefreshAccount(account)} onRemove={() => onRemove(account)} />
           ))}</div>
         )}

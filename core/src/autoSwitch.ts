@@ -1,3 +1,4 @@
+import { t3LinkStatus } from './t3Sync.js';
 import { restartController, RestartError, type RestartController } from './restart.js';
 import { setSetting } from './db.js';
 import {
@@ -271,8 +272,10 @@ export function runAutoSwitch(config: AppConfig, restarter: Pick<RestartControll
       } else {
         await switchTo(result.target.id, config);
         result.action = 'prepared';
-        result.reason += ' CLI login saved. Open desktop sessions were not changed.';
+        result.reason += ' CLI login saved. The Codex desktop session was not changed.';
       }
+      const t3 = t3LinkStatus();
+      if (t3.enabled) result.reason += t3.state === 'failed' ? ' T3 Code needs attention; see its link status.' : ' The linked T3 Code profile was updated.';
       pushEvent({
         type: 'auto_switch',
         title: `${result.action === 'switched' ? 'Codex switched to' : 'CLI login prepared for'} ${result.target.email}`,

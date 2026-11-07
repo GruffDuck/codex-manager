@@ -1,4 +1,7 @@
 import path from 'node:path';
+import { t3LinkStatus } from './t3Sync.js';
+import { withClientMutation } from './clientMutation.js';
+import { prepareT3Code } from './t3Code.js';
 import fs from 'node:fs';
 import { Readable } from 'node:stream';
 import Fastify, { type FastifyInstance, type FastifyRequest } from 'fastify';
@@ -42,7 +45,7 @@ import { runAutoSwitch } from './autoSwitch.js';
 import { desktop, type DesktopBridge } from './desktop.js';
 import { restartController, type RestartController } from './restart.js';
 
-const VERSION = '0.1.0-preview.4';
+const VERSION = '0.1.0-preview.7';
 const HOP_BY_HOP = new Set([
   'content-length',
   'content-encoding',
@@ -144,9 +147,15 @@ function captureQuota(row: AccountRow, headers: Headers, retryAfterSeconds?: num
   return quota;
 }
 
-async function readJson<T>(request: FastifyRequest, schema: z.ZodType<T>): Promise<T> {
-  const raw = request.body;
-  if (!Buffer.isBuffer(raw) || raw.length === 0) throw httpError(400, 'A JSON body is required', 'bad_request');
+function parseJsonBody<T>(raw: unknown, schema: z.ZodType<T>, allowEmpty: boolean): T {
+  if (raw === undefined || (Buffer.isBuffer(raw) && raw.length === 0)) {
+    if (allowEmpty) {
+      const empty = schema.safeParse({});
+      if (empty.success) return empty.data;
+    }
+    throw httpError(400, 'A JSON body is required', 'bad_request');
+  }
+  if (!Buffer.isBuffer(raw)) throw httpError(400, 'A JSON body is required', 'bad_request');
   const parsed = isJson(raw);
   if (parsed === undefined) throw httpError(400, 'Body is not valid JSON', 'bad_request');
   const result = schema.safeParse(parsed);
@@ -157,6 +166,15 @@ async function readJson<T>(request: FastifyRequest, schema: z.ZodType<T>): Promi
     throw httpError(400, detail, 'bad_request');
   }
   return result.data;
+}
+
+async function readJson<T>(request: FastifyRequest, schema: z.ZodType<T>): Promise<T> {
+  return parseJsonBody(request.body, schema, false);
+}
+
+/** Routes whose schema supplies defaults may omit the body entirely. */
+async function readOptionalJson<T>(request: FastifyRequest, schema: z.ZodType<T>): Promise<T> {
+  return parseJsonBody(request.body, schema, true);
 }
 
 function maskKey(key: string): string {
@@ -555,6 +573,7 @@ export async function buildGateway(deps: GatewayDeps): Promise<FastifyInstance> 
         oauth_port: OAUTH_PORT,
       },
       codex_home: codexHome(),
+      t3_code: t3LinkStatus(),
       accounts: listPublic(config),
       counts,
       current_account_id: currentAccountId(),
@@ -708,7 +727,7 @@ export async function buildGateway(deps: GatewayDeps): Promise<FastifyInstance> 
     const operation = await restarter.restart(id, config, 'manual');
     pushEvent({ type: 'switch', title: 'Codex restarted with the selected login',
       detail: 'Codex closed, the login was saved and Codex reopened. The running UI account was not independently read.', account_id: id });
-    return { ok: true, restarted: true, restart_required: false, operation, accounts: listPublic(config) };
+    return { ok: true, restarted: true, restart_required: false, operation, t3_code: t3LinkStatus(), accounts: listPublic(config) };
   });
 
   // Explicit fallback: prepare credentials without claiming a live switch.
@@ -730,6 +749,22 @@ export async function buildGateway(deps: GatewayDeps): Promise<FastifyInstance> 
       codex_config: codexConfigStatus(),
       accounts: listPublic(config),
     };
+  });
+
+  app.post('/api/t3-code/disconnect', async () => withClientMutation(async () => {
+    const current = t3LinkStatus();
+    const next = { ...current, enabled: false, state: 'disabled', verification: null,
+      message: 'T3 Code no longer follows Manager account changes.' };
+    setSetting('t3_code_link_v1', next);
+    return { ok: true, t3_code: next };
+  }));
+
+  app.post('/api/accounts/:id/use-in-t3-code', async (request) => {
+    const { id } = request.params as { id: string };
+    const result = await prepareT3Code(id);
+    pushEvent({ type: 'config', title: `T3 Code login prepared for ${result.account.email}`,
+      detail: 'The linked profile follows subsequent Manager account changes. One-time T3 provider setup is required; the private UI account has not been read.', account_id: id });
+    return result;
   });
 
   app.post('/api/accounts/:id/use-in-cli', async (request) => {
@@ -882,7 +917,7 @@ export async function buildGateway(deps: GatewayDeps): Promise<FastifyInstance> 
   });
 
   app.post('/api/codex/config', async (request) => {
-    const body = await readJson(
+    const body = await readOptionalJson(
       request,
       z.object({ model: z.string().optional(), model_provider: z.string().optional() }).default({}),
     );

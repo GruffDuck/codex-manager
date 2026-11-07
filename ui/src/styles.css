@@ -1257,6 +1257,8 @@ html[data-theme='dark'] .seg button.on {
 .quota-v { color: var(--text); font-size: 11px; text-align: right; }
 .quota-foot { color: var(--faint); font-size: 10px; line-height: 1.4; }
 .account-actions { display: flex; align-items: center; gap: 5px; justify-content: flex-end; }
+.account-client-actions { display: flex; flex-direction: column; align-items: stretch; gap: 6px; }
+.account-client-actions > .btn { justify-content: flex-start; }
 .account-actions .btn-sm { height: 30px; font-size: 11px; }
 .account-more { position: relative; }
 .account-more summary { list-style: none; }
@@ -2996,3 +2998,13 @@ html[data-theme='dark'] .preview-card {
 
 .desktop-note { padding: 12px 14px; border: 1px solid var(--border); border-radius: 9px; color: var(--muted); font-size: 12px; line-height: 1.6; background: var(--raised); }
 .desktop-note strong { font-weight: 500; color: var(--text); }
+
+/* Native dialog keeps keyboard focus inside the T3 Code setup. */
+.t3-modal { margin: auto; padding: 0; color: var(--text); }
+.t3-modal:not([open]) { display: none; }
+.t3-modal::backdrop { background: rgba(9, 14, 16, 0.34); }
+.t3-body { display: flex; flex-direction: column; gap: 14px; line-height: 1.6; }
+.t3-ready { display: flex; align-items: center; gap: 8px; }
+.t3-steps { padding-left: 20px; display: grid; gap: 10px; }
+.t3-path { display: flex; align-items: center; gap: 8px; }
+.t3-path .input { min-width: 0; flex: 1; }

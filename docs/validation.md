@@ -1,12 +1,12 @@
 # Validation record
 
-Date: **2026-11-02**. Product: **Codex Manager 0.1.0-preview.4**.
+Date: **2026-11-07**. Product: **Codex Manager 0.1.0-preview.7**.
 
 ## Completed checks
 
 | Check | Result | Scope |
 | --- | --- | --- |
-| `npm test` | 40 passed | Isolated core, mock gateway and lifecycle tests on macOS. |
+| `npm test` | 47 passed | Isolated core, mock gateway and lifecycle tests on macOS. |
 | `npm run typecheck` | Passed | Core and UI TypeScript. |
 | `npm run package` | Passed | macOS ARM64 DMG / ZIP. |
 | `npm run test:package` | Passed | Bundled Node 24.22.2, production dependencies and a fresh temporary home; health, API and UI responses. |
@@ -35,11 +35,19 @@ The previous placement code always positioned the popover below the tray icon. T
 
 The primary account button and zero-quota policy share a controller. Tests cover waiting before credential writes, refused quits, launch-failure recovery, unexpected auth changes and concurrent mutations.
 
-A real close/change/reopen cycle has **not** been performed. The development chat would be interrupted. Startup verification checks process state and the auth file, rather than independently reading Codex's displayed account. Conversation resumption is not implemented.
+A real **Codex desktop** close/change/reopen cycle has **not** been performed. The development chat would be interrupted. Startup verification checks process state and the auth file, rather than independently reading Codex's displayed account. Conversation resumption is not implemented.
+
+## Preview 7 T3 Code checks
+
+- Stable profile path across account selections; existing T3 sessions/configuration remain in that profile.
+- Tests cover same-account no-op, closed-app behavior, refused quits, failed-launch rollback, and shared CLI/desktop selection hooks.
+- Live validation on macOS with T3 Code 0.1.7 and Codex CLI 0.166.0: graceful quit/reopen, switch to a different eligible saved account, then restore the original account. Both launches reported an authenticated provider and available models. The selected auth file matched the target on each leg. No model request was sent.
+- The active Codex app was not closed during this live T3 check. Codex desktop close/change/reopen remains covered by simulated tests, not a live cycle.
+- Manager verification is process/auth-file based; it does not claim to read T3's private displayed account. Remote/background servers and Windows are outside the desktop restart support.
 
 ## Published artifacts
 
-The [v0.1.0-preview.4 release](https://github.com/GruffDuck/codex-manager/releases/tag/v0.1.0-preview.4) contains macOS ARM64 DMG/ZIP, Windows x64 Setup EXE/ZIP and SHA-256 checksums. Preview 4 includes the Windows tray restore and explicit quit fix, preserving the branding, startup and sign-in improvements from Preview 3. Previous previews remain available separately.
+The [v0.1.0-preview.7 release](https://github.com/GruffDuck/codex-manager/releases/tag/v0.1.0-preview.7) contains macOS ARM64 DMG/ZIP, Windows x64 Setup EXE/ZIP and SHA-256 checksums. Preview 7 includes linked T3 Code switching and its visible account action, plus the earlier Windows tray, branding, startup and sign-in improvements. Previous previews remain available separately.
 
 These are unsigned packages without macOS notarization or auto-update. Windows installation/startup, macOS Intel and Linux execution remain unvalidated. The macOS helper is excluded from Windows packages, which do not advertise restart support.
 
